@@ -40,7 +40,7 @@ double osm_operation_time(unsigned int iterations) {
     struct timeval t;
     gettimeofday(&t, NULL);
     double start = t.tv_sec*1000000000.0 + (t.tv_usec*1000.0);
-    for (int i=0; i < iterations; ++i) {
+    for (unsigned int i=0; i < iterations; ++i) {
         
     }
     gettimeofday(&t, NULL);
@@ -58,7 +58,7 @@ double osm_function_time(unsigned int iterations) {
     struct timeval t;
     gettimeofday(&t, NULL);
     double start = t.tv_sec*1000000000.0 + (t.tv_usec*1000.0);
-    for (int i=0; i < iterations/10; ++i) {
+    for (unsigned int i=0; i < iterations/10; ++i) {
         stupid();
         stupid();
         stupid();
@@ -84,7 +84,7 @@ double osm_syscall_time(unsigned int iterations) {
     struct timeval t;
     gettimeofday(&t, NULL);
     double start = t.tv_sec*1000000000.0 + (t.tv_usec*1000.0);
-    for (int i=0; i < iterations/10; ++i) {
+    for (unsigned int i=0; i < iterations/10; ++i) {
         OSM_NULLSYSCALL;
         OSM_NULLSYSCALL;
         OSM_NULLSYSCALL;
@@ -104,10 +104,10 @@ double osm_syscall_time(unsigned int iterations) {
 int main(int argc, char* argv[]) {
     int iter = 1000;
     if (argc == 1) {
-        int iter = atoi(argv[0]); 
+        iter = atoi(argv[0]); 
     }
     double t1 = osm_operation_time(iter);
     double t2 = osm_function_time(iter);
     double t3 = osm_syscall_time(iter);
-    printf("%l %l %l", t1, t2, t3);
+    printf("%d %d %d", t1, t2, t3);
 }
