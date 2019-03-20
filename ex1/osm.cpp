@@ -1,6 +1,6 @@
 #include <sys/time.h>
 #include <stdio.h>
-#include <osm.h>
+#include "osm.h"
 #include <stdlib.h>
 
 
