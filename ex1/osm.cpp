@@ -102,7 +102,10 @@ double osm_syscall_time(unsigned int iterations) {
 }
 
 int main(int argc, char* argv[]) {
-    int iter = atoi(argv[0]); 
+    int iter = 1000;
+    if (argc == 1) {
+        int iter = atoi(argv[0]); 
+    }
     double t1 = osm_operation_time(iter);
     double t2 = osm_function_time(iter);
     double t3 = osm_syscall_time(iter);
