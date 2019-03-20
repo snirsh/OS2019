@@ -1,4 +1,6 @@
 #include <sys/time.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 
 /* calling a system call that does nothing */
@@ -97,4 +99,12 @@ double osm_syscall_time(unsigned int iterations) {
     gettimeofday(&t, NULL);
     double end = t.tv_sec*1000000000.0 + (t.tv_usec*1000.0);
     return end - start;
+}
+
+int main(int argc, char* argv[]) {
+    int iter = atoi(argv[0]); 
+    double t1 = osm_operation_time(iter);
+    double t2 = osm_function_time(iter);
+    double t3 = osm_syscall_time(iter);
+    printf("%l %l %l", t1, t2, t3);
 }
