@@ -1,0 +1,23 @@
+snirsh, login2
+Student Snir Sharristh (305500001), Gil Adam (#####)
+EX: 1
+
+FILES:
+osm.c -- this file runs and measures running time of various operations.
+graph.jpg -- a graph that shows the running time of the 9 measured values.
+osm.h -- header for the above
+
+REMARKS:
+Nothing special.
+
+ANSWERS:
+ASSIGNMENT 1:
+What does the file WhatIDo does?
+well, after running strace on the file we can see that the file opens "Welcome/To/OS2018" with openat and checks that the folder is not in use.
+writes to the directory: 
+
+MYCSNAME
+If you haven't read the course guidelines yet --- do it right now!
+
+closes the folder unlinks it from the write command, then removes the whole path folder by folder and quits.
+
