@@ -35,17 +35,5 @@ if __name__ == '__main__':
         plt.legend()
 
         plt.tight_layout()
-        plt.show()
-
-
-
-    # import plotly
-    #
-    # plotly.tools.set_credentials_file(username='snirsh', api_key=api)
-    # data = [go.Bar(
-    #     x=[
-    #
-    #     ],
-    #     y=[int(x) for x in sys.argv[1::]]
-    # )]
-    # py.iplot(data, filename='results')
+        # plt.show()
+        plt.savefig('graph.png')
