@@ -110,7 +110,6 @@ int main(int argc, char* argv[]) {
     }
     double t1 = osm_operation_time(iter);
     double t2 = osm_function_time(iter);
-    //double t3 = osm_syscall_time(iter);
-    double t3 = 0;
+    double t3 = osm_syscall_time(iter);
     printf("op: %f\nfunc: %f\nsyscall: %f\n", t1, t2, t3);
 }
