@@ -13,11 +13,13 @@ Nothing special.
 ANSWERS:
 ASSIGNMENT 1:
 What does the file WhatIDo does?
-well, after running strace on the file we can see that the file opens "Welcome/To/OS2018" with openat and checks that the folder is not in use.
+well, after running strace on the file we can see that the file opens
+"Welcome/To/OS2018" with openat and checks that the folder is not in use.
 writes to the directory: 
 
 MYCSNAME
 If you haven't read the course guidelines yet --- do it right now!
 
-closes the folder unlinks it from the write command, then removes the whole path folder by folder and quits.
+closes the folder unlinks it from the write command,
+then removes the whole path folder by folder and quits.
 
