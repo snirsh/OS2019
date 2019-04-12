@@ -7,7 +7,7 @@ void foo() {
 }
 
 int main(int argc, char* argv[]) {
-    
+    cout<<"#### testing ####"<<endl;
     uthread_init(100);
     uthread_spawn(&foo);
     uthread_terminate(1);
@@ -17,6 +17,6 @@ int main(int argc, char* argv[]) {
     uthread_get_tid();
     uthread_get_total_quantums();
     uthread_get_quantums(4);
-
+    
     return 0;
 }

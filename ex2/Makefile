@@ -24,7 +24,7 @@ $(TARGETS): $(LIBOBJ)
 	$(RANLIB) $@
 
 clean:
-	$(RM) $(TARGETS) $(LIBNAME) $(OBJ) $(LIBOBJ) *~ *core
+	$(RM) $(TARGETS) $(LIBNAME) $(OBJ) $(LIBOBJ) *~ *core test
 
 depend:
 	makedepend -- $(CFLAGS) -- $(SRC) $(LIBSRC)
@@ -33,7 +33,7 @@ tar:
 	$(TAR) $(TARFLAGS) $(TARNAME) $(TARSRCS)
 
 test:
-	make clean
-	$(CC) $(CFLAGS) -c -o uthread_test test.cpp
-	chmod 777 uthread_test
-	./uthread_test
+	make
+	$(CC) -o test test.cpp libuthreads.a
+	chmod 777 test
+	./test
