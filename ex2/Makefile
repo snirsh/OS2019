@@ -31,3 +31,9 @@ depend:
 
 tar:
 	$(TAR) $(TARFLAGS) $(TARNAME) $(TARSRCS)
+
+test:
+	make clean
+	$(CC) $(CFLAGS) -c -o uthread_test test.cpp
+	chmod 777 uthread_test
+	./uthread_test
