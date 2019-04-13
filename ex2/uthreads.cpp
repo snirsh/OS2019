@@ -17,9 +17,9 @@ using namespace std;
 #define MAX_THREAD_NUM 100 /* maximal number of threads */
 #define STACK_SIZE 4096 /* stack size per thread (in bytes) */
 
-#define ENTER(func) //cout<<"## entering: "<<func<<" ##"<<endl;
-#define PARAM(p,v) //cout<<"## "<<p<<" = "<<v<<" ##"<<endl;
-#define EXIT(func) //cout<<"## exiting: "<<func<<" ##"<<endl<<endl;
+#define ENTER(func) cout<<"## entering: "<<func<<" ##"<<endl;
+#define PARAM(p,v) cout<<"## "<<p<<" = "<<v<<" ##"<<endl;
+#define EXIT(func) cout<<"## exiting: "<<func<<" ##"<<endl<<endl;
 #define MSG(msg) cout<<msg<<endl;
 
 /* GLOBALS */
@@ -192,8 +192,8 @@ int uthread_terminate(int tid) {
             ready_list.remove(th);
         case BLOCKED:
             blocked_list.remove(th);
-        th->~Thread();
     }
+    th->~Thread();
     
     EXIT("terminate")
     return 0;
@@ -214,11 +214,13 @@ int uthread_block(int tid) {
 
     if (tid > 99 || tid <= 0) {
         // invalid id
+        MSG("block: invalid tid")
         return -1;
     }
     Thread* th = Thread::get_th(tid);
     if (th == nullptr) {
         // no such thread
+        MSG("block: invalid tid 2")
         return -1;
     }
     State st = th->get_state();
@@ -227,10 +229,11 @@ int uthread_block(int tid) {
             return 0;
         case RUNNING:
             switch_threads(0);
-        ready_list.remove(th);
-        blocked_list.push_front(th);
-        th->set_state(BLOCKED);
     }
+    ready_list.remove(th);
+    blocked_list.push_front(th);
+    th->set_state(BLOCKED);
+    
     EXIT("block")
     return 0;
 }
