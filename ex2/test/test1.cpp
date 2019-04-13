@@ -90,8 +90,8 @@ int main(void)
 
     while(1)
     {
-        //int a = uthread_get_quantums(uthread_get_tid());
-        //cout<<"quantums of thread number " << uthread_get_tid()<<" is " <<a<<std::endl;
+        int a = uthread_get_quantums(uthread_get_tid());
+        cout<<"quantums of thread number " << uthread_get_tid()<<" is " <<a<<std::endl;
         if (i == uthread_get_quantums(uthread_get_tid()))
         {
             cout << "m" << "  q:  " << i << endl;

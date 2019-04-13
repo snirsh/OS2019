@@ -17,9 +17,12 @@ using namespace std;
 #define MAX_THREAD_NUM 100 /* maximal number of threads */
 #define STACK_SIZE 4096 /* stack size per thread (in bytes) */
 
-#define ENTER(func) cout<<"## entering: "<<func<<" ##"<<endl;
-#define PARAM(p,v) cout<<"## "<<p<<" = "<<v<<" ##"<<endl;
-#define EXIT(func) cout<<"## exiting: "<<func<<" ##"<<endl<<endl;
+#define ENTER(func) cout<<endl;
+//#define ENTER(func) cout<<"## entering: "<<func<<" ##"<<endl;
+#define PARAM(p,v) cout<<endl;
+//#define PARAM(p,v) cout<<"## "<<p<<" = "<<v<<" ##"<<endl;
+#define EXIT(func) cout<<endl;
+//#define EXIT(func) cout<<"## exiting: "<<func<<" ##"<<endl<<endl;
 
 /* GLOBALS */
 list<Thread*> ready_list, blocked_list;
