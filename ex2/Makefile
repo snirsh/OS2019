@@ -2,7 +2,7 @@ CC=g++
 CXX=g++
 RANLIB=ranlib
 
-LIBSRC=uthreads.cpp
+LIBSRC=uthreads.cpp sleeping_threads_list.cpp thread.cpp
 LIBOBJ=$(LIBSRC:.cpp=.o)
 
 INCS=-I.
@@ -24,7 +24,7 @@ $(TARGETS): $(LIBOBJ)
 	$(RANLIB) $@
 
 clean:
-	$(RM) $(TARGETS) $(LIBNAME) $(OBJ) $(LIBOBJ) *~ *core test
+	$(RM) $(TARGETS) $(LIBNAME) $(OBJ) $(LIBOBJ) *~ *core th_test
 
 depend:
 	makedepend -- $(CFLAGS) -- $(SRC) $(LIBSRC)
@@ -32,8 +32,8 @@ depend:
 tar:
 	$(TAR) $(TARFLAGS) $(TARNAME) $(TARSRCS)
 
-test:
+testo:
 	make
-	$(CC) -o test test.cpp libuthreads.a
-	chmod 777 test
-	./test
+	$(CC) -o th_test test.cpp libuthreads.a
+	chmod 777 th_test
+	./th_test

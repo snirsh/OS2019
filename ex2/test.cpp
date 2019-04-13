@@ -7,16 +7,12 @@ void foo() {
 }
 
 int main(int argc, char* argv[]) {
-    cout<<"#### testing ####"<<endl;
-    uthread_init(100);
+    cout<<endl<<"############### TESTING ###############"<<endl;
+    uthread_init(1000);
     uthread_spawn(&foo);
-    uthread_terminate(1);
-    uthread_block(2);
-    uthread_resume(3);
-    uthread_sleep(100);
-    uthread_get_tid();
-    uthread_get_total_quantums();
-    uthread_get_quantums(4);
+    uthread_spawn(&foo);
+    uthread_spawn(&foo);
+    uthread_spawn(&foo);
     
     return 0;
 }
