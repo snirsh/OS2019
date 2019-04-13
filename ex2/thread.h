@@ -1,3 +1,5 @@
+# include <signal.h>
+
 #ifndef _THREAD_H
 #define _THREAD_H
 
@@ -46,13 +48,20 @@ class Thread
 {
  private:
     int tid, quantums;
-    address_t sp, pc;
     State cur_state;
+    sigjmp_buf* env;
  public:
-    Thread();
+    Thread() : quantums(0), cur_state(READY) {};
+    Thread(void (*f)(void)) : quantums(0), cur_state(READY) {};
+    ~Thread();
     int get_quantums();
+    int get_tid() {return tid;}
+    sigjmp_buf* get_env() {return env;}
     void inc_quantums();
     void set_state(State);
+    State get_state() {return cur_state;}
+    static Thread* get_th(int tid);
+    static void kill_all();
 }; 
 
 #endif
