@@ -107,7 +107,7 @@ int uthread_init(int quantum_usecs) {
 	}
 
     quantum = quantum_usecs;
-    Thread* main_th = new Thread::Thread();
+    Thread* main_th = new Thread();
     if (main_th == nullptr) {
         // no thread created error
         return -1;
@@ -140,7 +140,7 @@ int uthread_spawn(void (*f)(void)) {
     ENTER("spawn")
     PARAM("func", f)
 
-    Thread* new_th = new Thread::Thread(f);
+    Thread* new_th = new Thread(f);
     if (new_th == nullptr) {
         // no thread created error
         return -1;
