@@ -13,6 +13,8 @@ typedef unsigned long address_t;
 #define JB_SP 6
 #define JB_PC 7
 
+#ifndef _STUPID
+#define _STUPID
 /* A translation is required when using an address of a variable.
    Use this as a black box in your code. */
 address_t translate_address(address_t addr)
@@ -43,6 +45,7 @@ address_t translate_address(address_t addr)
                  : "0" (addr));
     return ret;
 }
+#endif
 
 #endif
 class Thread
