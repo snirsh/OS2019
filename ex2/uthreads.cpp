@@ -41,7 +41,7 @@ void switch_threads(int sig)
     new_th->inc_quantums();
 
     int ret_val = sigsetjmp(*cur_th->get_env(),1);
-    printf("SWITCH: ret_val=%d\n", ret_val); 
+    printf("SWITCH: now running=%d\n", new_th->get_tid()); 
     if (ret_val == 1) {
         return;
     }

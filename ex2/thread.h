@@ -1,4 +1,6 @@
 # include <signal.h>
+# include <setjmp.h>
+# include "uthreads.h"
 
 #ifndef _THREAD_H
 #define _THREAD_H
@@ -48,15 +50,16 @@ class Thread
 {
  private:
     int tid, quantums;
+    char stack[STACK_SIZE];
     State cur_state;
-    sigjmp_buf* env;
+    sigjmp_buf env;
  public:
-    Thread() : quantums(0), cur_state(READY) {};
-    Thread(void (*f)(void)) : quantums(0), cur_state(READY) {};
+    Thread();
+    Thread(void (*f)(void));
     ~Thread();
     int get_quantums();
     int get_tid() {return tid;}
-    sigjmp_buf* get_env() {return env;}
+    sigjmp_buf* get_env() {return &env;}
     void inc_quantums();
     void set_state(State);
     State get_state() {return cur_state;}
