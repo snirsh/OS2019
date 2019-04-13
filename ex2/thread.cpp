@@ -42,14 +42,14 @@ typedef unsigned int address_t;
 #endif
 
 static map<int, Thread*> th_map;
-static bool av_tids[100] = {true};
+static bool av_tids[MAX_THREAD_NUM] = {true};
 
 /* ctors */
 Thread::Thread() : quantums(0), cur_state(READY) {
     av_tids[0] = false;
 }
 Thread::Thread(void (*f)(void)) : quantums(0), cur_state(READY) {
-    for (int i=1; i < 100; i++) {
+    for (int i=1; i < MAX_THREAD_NUM; i++) {
         if (av_tids[i]) {
             tid = i;
             av_tids[i] = false;
@@ -57,7 +57,7 @@ Thread::Thread(void (*f)(void)) : quantums(0), cur_state(READY) {
         }
     }
     address_t sp, pc;
-    sp = (address_t)stack + 4096 - sizeof(address_t);
+    sp = (address_t)stack + STACK_SIZE - sizeof(address_t);
     pc = (address_t)f;
     sigsetjmp(env, 1);
     (env->__jmpbuf)[JB_SP] = translate_address(sp);

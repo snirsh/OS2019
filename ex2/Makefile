@@ -24,7 +24,7 @@ $(TARGETS): $(LIBOBJ)
 	$(RANLIB) $@
 
 clean:
-	$(RM) $(TARGETS) $(LIBNAME) $(OBJ) $(LIBOBJ) *~ *core test
+	$(RM) $(TARGETS) $(LIBNAME) $(OBJ) $(LIBOBJ) *~ *core th_test
 
 depend:
 	makedepend -- $(CFLAGS) -- $(SRC) $(LIBSRC)
@@ -34,6 +34,6 @@ tar:
 
 test:
 	make
-	$(CC) -o test test.cpp libuthreads.a
-	chmod 777 test
-	./test
+	$(CC) -o th_test test.cpp libuthreads.a
+	chmod 777 th_test
+	./th_test
