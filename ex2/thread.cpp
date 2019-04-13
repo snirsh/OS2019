@@ -51,7 +51,6 @@ Thread::Thread() : quantums(0), cur_state(READY) {
     av_tids[0] = false;
 }
 Thread::Thread(void (*f)(void)) : quantums(0), cur_state(READY) {
-    cout << "in thread ctor" << endl;
     for (int i=1; i < MAX_THREAD_NUM; i++) {
         if (av_tids[i] == true) {
             tid = i;
