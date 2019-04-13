@@ -20,14 +20,8 @@ int main(int argc, char* argv[]) {
     uthread_init(100000);
     uthread_spawn(&foo);
     wait();
-    uthread_spawn(&foo);
-    wait();
-    uthread_spawn(&foo);
-    wait();
-    uthread_block(1);
-    wait();
-    uthread_resume(1);
-    
+    uthread_sleep(100000);
+
     for(;;){}
     return 0;
 }

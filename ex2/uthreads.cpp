@@ -20,6 +20,7 @@ using namespace std;
 #define ENTER(func) cout<<"## entering: "<<func<<" ##"<<endl;
 #define PARAM(p,v) cout<<"## "<<p<<" = "<<v<<" ##"<<endl;
 #define EXIT(func) cout<<"## exiting: "<<func<<" ##"<<endl<<endl;
+#define ERR(msg) cerr<<msg<<endl;
 #define MSG(msg) cout<<msg<<endl;
 
 /* GLOBALS */
@@ -214,13 +215,13 @@ int uthread_block(int tid) {
 
     if (tid > 99 || tid <= 0) {
         // invalid id
-        MSG("block: invalid tid")
+        ERR("block: invalid tid")
         return -1;
     }
     Thread* th = Thread::get_th(tid);
     if (th == nullptr) {
         // no such thread
-        MSG("block: invalid tid 2")
+        ERR("block: invalid tid 2")
         return -1;
     }
     State st = th->get_state();
@@ -282,7 +283,7 @@ int uthread_sleep(unsigned int usec) {
 
     int tid = uthread_get_tid();
     if (tid == 0) {
-        // main th can't call sleep
+        ERR("can't sleep main")
         return -1;
     }
     
