@@ -57,11 +57,11 @@ class Thread
     Thread();
     Thread(void (*f)(void));
     ~Thread();
-    int get_quantums();
+    int get_quantums() {return quantums;}
     int get_tid() {return tid;}
     sigjmp_buf* get_env() {return &env;}
-    void inc_quantums();
-    void set_state(State);
+    void inc_quantums() {quantums++;}
+    void set_state(State st) {cur_state = st;}
     State get_state() {return cur_state;}
     static Thread* get_th(int tid);
     static void kill_all();
