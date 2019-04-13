@@ -20,6 +20,7 @@ using namespace std;
 #define ENTER(func) //cout<<"## entering: "<<func<<" ##"<<endl;
 #define PARAM(p,v) //cout<<"## "<<p<<" = "<<v<<" ##"<<endl;
 #define EXIT(func) //cout<<"## exiting: "<<func<<" ##"<<endl<<endl;
+#define MSG(msg) cout<<msg<<endl;
 
 /* GLOBALS */
 list<Thread*> ready_list, blocked_list;
@@ -147,6 +148,7 @@ int uthread_spawn(void (*f)(void)) {
     }
     ready_list.push_back(new_th);
 
+    MSG("spawned tid: "<<new_th->get_tid())
     return new_th->get_tid();
     EXIT("spawn")
 }
@@ -354,7 +356,7 @@ int uthread_get_quantums(int tid) {
     ENTER("get_quantums")
     PARAM("tid", tid)
 
-        if (tid > 99 || tid < 0) {
+    if (tid > 99 || tid < 0) {
         // invalid id
         return -1;
     }

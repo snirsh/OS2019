@@ -7,8 +7,12 @@ void foo() {
 }
 
 int main(int argc, char* argv[]) {
-    cout<<"#### testing ####"<<endl;
+    cout<<endl<<"############### TESTING ###############"<<endl;
     uthread_init(1000);
+    uthread_spawn(&foo);
+    uthread_spawn(&foo);
+    uthread_spawn(&foo);
+    uthread_spawn(&foo);
     
     return 0;
 }

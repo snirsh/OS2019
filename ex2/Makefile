@@ -32,7 +32,7 @@ depend:
 tar:
 	$(TAR) $(TARFLAGS) $(TARNAME) $(TARSRCS)
 
-test:
+testo:
 	make
 	$(CC) -o th_test test.cpp libuthreads.a
 	chmod 777 th_test
