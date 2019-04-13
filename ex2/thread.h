@@ -1,6 +1,5 @@
 # include <signal.h>
 # include <setjmp.h>
-# include "uthreads.h"
 
 #ifndef _THREAD_H
 #define _THREAD_H
@@ -50,7 +49,7 @@ class Thread
 {
  private:
     int tid, quantums;
-    char stack[STACK_SIZE];
+    char stack[4096];
     State cur_state;
     sigjmp_buf env;
  public:
