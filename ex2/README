@@ -7,3 +7,35 @@ FILES:
 REMARKS:
 
 ANSWERS:
+1.  for example, when using a messaging application,
+    we want to be able to still recieve new messages
+    even while we are writing, like WhatsApp (Desktop).
+    In order to do so we can create a task that schedules
+    reading and writing from and to the WhatsApp remote 
+    servers.
+    In order to do so we can use user-level threads that
+    schedule reading and writing correctly.
+    As seen in class, user-level threads switching costs
+    less that kernel-level.
+    Because we are looking for better thread switching
+    and to support alot of switching for the user,
+    we'll prefer using user-level threads.
+
+2.  
++-----------------------------------+------------------------------------+
+| Pros                              | Cons                               |
++-----------------------------------+------------------------------------+
+| Switching between tabs costs less | No multi-core performance          |
+|                                   | (Loading few tabs simultaneously)  |
++-----------------------------------+------------------------------------+
+| Each tab has it's own resources   | Can't share data even if they have |
+|                                   | Common data to share               |
+|                                   | (like marketing information,       |
+|                                   |  User preferences etc)             |
++-----------------------------------+------------------------------------+
+| Scheduling between tabs           |                                    |
+| can be more precise and specific  |                                    |
++-----------------------------------+------------------------------------+
+
+3.  
+
