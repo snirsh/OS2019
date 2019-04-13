@@ -23,9 +23,9 @@ Thread::Thread(void (*f)(void)) : quantums(0), cur_state(READY) {
     sp = (address_t)stack + STACK_SIZE - sizeof(address_t);
     pc = (address_t)f;
     sigsetjmp(env, 1);
-    //(env->__jmpbuf)[JB_SP] = translate_address(sp);
-    //(env->__jmpbuf)[JB_PC] = translate_address(pc);
-    //sigemptyset(&env->__saved_mask); 
+    (env->__jmpbuf)[JB_SP] = translate_address(sp);
+    (env->__jmpbuf)[JB_PC] = translate_address(pc);
+    sigemptyset(&env->__saved_mask); 
     // TODO: check ret vals??
 }
 
