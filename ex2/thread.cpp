@@ -49,9 +49,9 @@ static bool av_tids[MAX_THREAD_NUM];
 Thread::Thread() : quantums(0), cur_state(READY) {
     fill_n(av_tids, MAX_THREAD_NUM, true);
     av_tids[0] = false;
+    th_map[tid] = this;
 }
 Thread::Thread(void (*f)(void)) : quantums(0), cur_state(READY) {
-    cout << "in thread ctor" << endl;
     for (int i=1; i < MAX_THREAD_NUM; i++) {
         if (av_tids[i] == true) {
             tid = i;
@@ -59,6 +59,7 @@ Thread::Thread(void (*f)(void)) : quantums(0), cur_state(READY) {
             break;
         }
     }
+    th_map[tid] = this;
     /*
     address_t sp, pc;
     sp = (address_t)stack + STACK_SIZE - sizeof(address_t);
@@ -78,6 +79,7 @@ Thread::~Thread() {
 /* funcs */
 Thread* Thread::get_th(int tid) {
     // return nullptr?
+
     return th_map[tid];
 }
 
