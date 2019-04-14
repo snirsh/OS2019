@@ -29,9 +29,18 @@ SleepingThreadsList sleep_list;
 struct sigaction sa_real = {0};
 struct sigaction sa_virt = {0};
 struct itimerval timer;
-int quantum, total_qu;
+struct timeval quantum;
+int total_qu;
 
 /* inner funcs */
+void set_vtimer() {
+    timer.it_value = quantum;
+    timer.it_interval = quantum;
+    if (setitimer (ITIMER_VIRTUAL, &timer, NULL)) {
+        ERR("set_vtimer: setitimer error.");
+    }
+}
+
 void switch_threads(int sig)
 {
     Thread* cur_th = ready_list.front();
@@ -41,6 +50,7 @@ void switch_threads(int sig)
     Thread* new_th = ready_list.front();
     new_th->set_state(RUNNING);
     new_th->inc_quantums();
+    total_qu ++;
 
     int ret_val = sigsetjmp(*cur_th->get_env(),1);
     printf("SWITCH: now running=%d\n", new_th->get_tid()); 
@@ -50,10 +60,6 @@ void switch_threads(int sig)
     // TODO: check ret val?
     //siglongjmp(*new_th->get_env(),1);
 
-    timer.it_value.tv_usec = quantum;
-    if (setitimer (ITIMER_VIRTUAL, &timer, NULL)) {
-        printf("setitimer error.");
-    }
 }
 
 void wake(int sig)
@@ -112,21 +118,22 @@ int uthread_init(int quantum_usecs) {
 		printf("sigaction error (virtual)");
 	}
 
-    quantum = quantum_usecs;
+    // configure quantum timeval
+    quantum.tv_sec = quantum_usecs / 1000000;
+	quantum.tv_usec = quantum_usecs % 1000000;
+
+    // create main thread
     Thread* main_th = new Thread();
     if (main_th == nullptr) {
-        // no thread created error
+        ERR("init: cna't create main thread")
         return -1;
     }
     ready_list.push_front(main_th);
     main_th->inc_quantums();
     total_qu = 1;
 
-    // set the first virtual timer to get things going
-	timer.it_value.tv_usec = quantum;
-    if (setitimer (ITIMER_VIRTUAL, &timer, NULL)) {
-        printf("setitimer error.");
-    }
+    // set the virtual timer to get things going
+	set_vtimer();
 
     EXIT("init")
     return 0;
@@ -194,6 +201,7 @@ int uthread_terminate(int tid) {
             ready_list.remove(th);
         case RUNNING:
             switch_threads(0);
+            set_vtimer();
             ready_list.remove(th);
         case BLOCKED:
             blocked_list.remove(th);
@@ -234,6 +242,7 @@ int uthread_block(int tid) {
             return 0;
         case RUNNING:
             switch_threads(0);
+            set_vtimer();
     }
     ready_list.remove(th);
     blocked_list.push_front(th);
@@ -295,7 +304,9 @@ int uthread_sleep(unsigned int usec) {
 
     // adding the first timer
     if (wk == nullptr) {
-        timer.it_value = calc_wake_up_timeval(usec);
+        timeval wk_tv = calc_wake_up_timeval(usec);
+        timer.it_value.tv_sec = wk_tv.tv_sec;
+        timer.it_value.tv_usec = wk_tv.tv_usec;
         if (setitimer (ITIMER_REAL, &timer, NULL)) {
             ERR("sleep: setitimer error.");
             return -1;
@@ -309,9 +320,11 @@ int uthread_sleep(unsigned int usec) {
         uthread_block(tid);
         wk = sleep_list.peek();
         if (wk->id == tid) {
-            timer.it_value = calc_wake_up_timeval(usec);
+            timeval wk_tv = calc_wake_up_timeval(usec);
+            timer.it_value.tv_sec = wk_tv.tv_sec;
+            timer.it_value.tv_usec = wk_tv.tv_usec;
             if (setitimer (ITIMER_REAL, &timer, NULL)) {
-                ERR("sleep: setitimer error.");
+                ERR("sleep: setitimer error.")
                 return -1;
             }
             MSG("sleep: not first timer")
