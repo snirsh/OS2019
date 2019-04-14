@@ -207,7 +207,6 @@ int uthread_terminate(int tid) {
             ready_list.remove(th);
         case RUNNING:
             switch_threads(0);
-            set_vtimer();
             ready_list.remove(th);
         case BLOCKED:
             blocked_list.remove(th);
@@ -248,7 +247,6 @@ int uthread_block(int tid) {
             return 0;
         case RUNNING:
             switch_threads(0);
-            set_vtimer();
     }
     ready_list.remove(th);
     blocked_list.push_front(th);
@@ -310,7 +308,8 @@ int uthread_sleep(unsigned int usec) {
 
     // adding the first timer
     if (wk == nullptr) {
-        timer.it_value = calc_wake_up_timeval(usec);
+        timer.it_value.tv_sec = usec / 1000000;
+	    timer.it_value.tv_usec = usec % 1000000;
         if (setitimer (ITIMER_REAL, &timer, NULL)) {
             ERR("sleep: setitimer error.");
             return -1;
@@ -332,6 +331,7 @@ int uthread_sleep(unsigned int usec) {
             MSG("sleep: not first timer")
         }
     }
+    set_vtimer();
     EXIT("sleep")
     return 0;
 }

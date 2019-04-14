@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     uthread_spawn(&foo);
     uthread_spawn(&foo);
     wait();
-    uthread_sleep(10000);
+    uthread_sleep(600000);
 
     for(;;){}
     return 0;
