@@ -58,18 +58,22 @@ void switch_threads(int sig)
 
 void wake(int sig)
 {
+    ENTER("wake")
     wake_up_info* wk = sleep_list.peek();
     int tid = wk->id;
     timeval old_tv = wk->awaken_tv;
     sleep_list.pop();
-    timeval new_tv = sleep_list.peek()->awaken_tv;
-    timersub(&new_tv, &old_tv, &timer.it_value);
 
-    if (setitimer (ITIMER_REAL, &timer, NULL)) {
-        printf("setitimer error.");
+    wake_up_info* next = sleep_list.peek();
+    if (next != nullptr) {
+        timeval new_tv = next->awaken_tv;
+        timersub(&new_tv, &old_tv, &timer.it_value);
+        if (setitimer (ITIMER_REAL, &timer, NULL)) {
+            printf("setitimer error.");
+        }
     }
-
     uthread_resume(tid);
+    EXIT("wake")
 }
 
 timeval calc_wake_up_timeval(int usecs_to_sleep)
@@ -150,8 +154,8 @@ int uthread_spawn(void (*f)(void)) {
     ready_list.push_back(new_th);
 
     MSG("spawned tid: "<<new_th->get_tid())
-    return new_th->get_tid();
     EXIT("spawn")
+    return new_th->get_tid();
 }
 
 /*
@@ -265,9 +269,9 @@ int uthread_resume(int tid) {
         ready_list.push_back(th);
         th->set_state(READY);
     }
+    EXIT("resume")
     return 0;
 
-    EXIT("resume")
 }
 
 /*
@@ -293,11 +297,12 @@ int uthread_sleep(unsigned int usec) {
     if (wk == nullptr) {
         timer.it_value = calc_wake_up_timeval(usec);
         if (setitimer (ITIMER_REAL, &timer, NULL)) {
-		    printf("setitimer error.");
+            ERR("sleep: setitimer error.");
             return -1;
 	    }
         sleep_list.add(tid, timer.it_value);
         uthread_block(tid);
+        MSG("sleep: first timer")
     
     } else {
         sleep_list.add(tid, calc_wake_up_timeval(usec));
@@ -306,14 +311,14 @@ int uthread_sleep(unsigned int usec) {
         if (wk->id == tid) {
             timer.it_value = calc_wake_up_timeval(usec);
             if (setitimer (ITIMER_REAL, &timer, NULL)) {
-                printf("setitimer error.");
+                ERR("sleep: setitimer error.");
                 return -1;
             }
+            MSG("sleep: not first timer")
         }
     }
-    return 0;
-
     EXIT("sleep")
+    return 0;
 }
 
 /*
@@ -323,9 +328,9 @@ int uthread_sleep(unsigned int usec) {
 int uthread_get_tid() {
     ENTER("get_tid")
     
+    EXIT("get_tid")
     return ready_list.front()->get_tid();
 
-    EXIT("get_tid")
 }
 
 /*
@@ -369,7 +374,7 @@ int uthread_get_quantums(int tid) {
         // no such thread
         return -1;
     }
+    EXIT("get_quantums")
     return th->get_quantums();
 
-    EXIT("get_quantums")
 }

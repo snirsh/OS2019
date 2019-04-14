@@ -19,8 +19,10 @@ int main(int argc, char* argv[]) {
     cout<<endl<<"############### TESTING ###############"<<endl;
     uthread_init(100000);
     uthread_spawn(&foo);
+    uthread_spawn(&foo);
+    uthread_spawn(&foo);
     wait();
-    uthread_sleep(100000);
+    uthread_sleep(1000);
 
     for(;;){}
     return 0;
