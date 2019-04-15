@@ -23,6 +23,7 @@ int main(int argc, char* argv[]) {
     uthread_spawn(&foo);
     wait();
     uthread_sleep(600000);
+    uthread_sleep(1200000);
 
     for(;;){}
     return 0;
