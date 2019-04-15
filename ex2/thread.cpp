@@ -64,10 +64,16 @@ Thread::Thread(void (*f)(void)) : quantums(0), cur_state(READY) {
     address_t sp, pc;
     sp = (address_t)stack + STACK_SIZE - sizeof(address_t);
     pc = (address_t)f;
-    sigsetjmp(env, 1);
+    int ret_val = sigsetjmp(env, 1);
+    if (ret_val != 0) {
+        cout<<"thread init: sigsetjmp error";
+    }
     (env->__jmpbuf)[JB_SP] = translate_address(sp);
     (env->__jmpbuf)[JB_PC] = translate_address(pc);
-    sigemptyset(&env->__saved_mask); 
+    ret_val = sigemptyset(&env->__saved_mask); 
+    if (ret_val != 0) {
+        cout<<"thread init: sigemptyset error";
+    }
     // TODO: check ret vals??
     
 }
