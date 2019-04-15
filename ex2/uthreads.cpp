@@ -160,8 +160,7 @@ int uthread_init(int quantum_usecs) {
  * On failure, return -1.
 */
 int uthread_spawn(void (*f)(void)) {
-    MSG("spawning a new thread")
-    PARAM("func", f)
+    MSG("spawning a new thread for func " << f)
 
     Thread* new_th = new Thread(f);
     if (new_th == nullptr) {
