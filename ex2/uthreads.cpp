@@ -324,6 +324,8 @@ int uthread_sleep(unsigned int usec) {
         uthread_block(tid);
         timer.it_value.tv_sec = usec / 1000000;
 	    timer.it_value.tv_usec = usec % 1000000;
+        timer.it_interval.tv_sec = 1000000;
+	    timer.it_interval.tv_usec = 0;
         if (setitimer (ITIMER_REAL, &timer, NULL)) {
             ERR("sleep: setitimer error.");
             return -1;
