@@ -33,56 +33,12 @@ void wait() {
 
 void f (void)
 {
-    int i = 1;
-    int j = 0;
-    while(1)
-    {
-        if (i == uthread_get_quantums(uthread_get_tid()))
-        {
-            cout << "f" << "  q:  " << i << endl;
-            if (i == 3 && j == 0)
-            {
-                j++;
-                cout << "          f suspend by f" << endl;
-                uthread_block(uthread_get_tid());
-            }
-            if (i == 6 && j == 1)
-            {
-                j++;
-                cout << "          g resume by f" << endl;
-                uthread_resume(2);
-            }
-            if (i == 8 && j == 2)
-            {
-                j++;
-                cout << "          **f end**" << endl;
-                uthread_terminate(uthread_get_tid());
-                return;
-            }
-            i++;
-        }
-    }
+
 }
 
 void g (void)
 {
-    int i = 1;
-    int j = 0;
-    while(1)
-    {
-        if (i == uthread_get_quantums(uthread_get_tid()))
-        {
-            cout << "g" << "  q:  " << i << endl;
-            if (i == 11 && j == 0)
-            {
-                j++;
-                cout << "          **g end**" << endl;
-                uthread_terminate(uthread_get_tid());
-                return;
-            }
-            i++;
-        }
-    }
+    
 }
 
 
