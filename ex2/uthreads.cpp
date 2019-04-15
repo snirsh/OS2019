@@ -66,8 +66,7 @@ void switch_threads(int sig)
         return;
     }
     // TODO: check ret val?
-    siglongjmp(*new_th->get_env(),1);
-}
+    siglongjmp(*(new_th->get_env()), 1);
 
 void wake(int sig)
 {

@@ -34,6 +34,6 @@ tar:
 
 testo:
 	make
-	$(CC) -o th_test test.cpp libuthreads.a
+	$(CC) -g -o th_test test.cpp libuthreads.a
 	chmod 777 th_test
 	./th_test
