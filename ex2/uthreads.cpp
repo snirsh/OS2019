@@ -61,7 +61,7 @@ void switch_threads(int sig)
     total_qu ++;
 
     int ret_val = sigsetjmp(*cur_th->get_env(),1);
-    MSG("SWITCH: now running tid " << new_th->get_tid())
+    MSG("                        SWITCH: now running tid " << new_th->get_tid())
     if (ret_val == 1) {
         return;
     }
@@ -82,6 +82,8 @@ void wake(int sig)
         MSG("wake: next in sleep list: tid " << next->id)
         timeval new_tv = next->awaken_tv;
         timersub(&new_tv, &old_tv, &timer.it_value);
+        timer.it_interval.tv_sec = 1000000;
+	    timer.it_interval.tv_usec = 0;
         if (setitimer (ITIMER_REAL, &timer, NULL)) {
             ERR("wake: setitimer error.");
         }
