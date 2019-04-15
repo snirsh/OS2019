@@ -61,7 +61,7 @@ void switch_threads(int sig)
     total_qu ++;
 
     int ret_val = sigsetjmp(*cur_th->get_env(),1);
-    MSG("                        SWITCH: now running tid " << new_th->get_tid())
+    MSG("                        SWITCH: now running tid: " << new_th->get_tid()<<"  quantums: "<<new_th->get_quantums()<< "/"<<total_qu)
     if (ret_val == 1) {
         return;
     }
