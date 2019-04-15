@@ -60,7 +60,7 @@ Thread::Thread(void (*f)(void)) : quantums(0), cur_state(READY) {
         }
     }
     th_map[tid] = this;
-    /*
+    
     address_t sp, pc;
     sp = (address_t)stack + STACK_SIZE - sizeof(address_t);
     pc = (address_t)f;
@@ -69,7 +69,7 @@ Thread::Thread(void (*f)(void)) : quantums(0), cur_state(READY) {
     (env->__jmpbuf)[JB_PC] = translate_address(pc);
     sigemptyset(&env->__saved_mask); 
     // TODO: check ret vals??
-    */
+    
 }
 
 Thread::~Thread() {
