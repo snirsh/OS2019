@@ -73,7 +73,8 @@ Thread::Thread(void (*f)(void)) : quantums(0), cur_state(READY) {
 }
 
 Thread::~Thread() {
-    av_tids[this->get_tid()] = true;
+    av_tids[tid] = true;
+    th_map.erase(tid);
 }
 
 /* funcs */

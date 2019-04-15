@@ -112,6 +112,11 @@ int uthread_init(int quantum_usecs) {
     ENTER("init")
     PARAM("quantum_usecs", quantum_usecs)
 
+    if (quantum_usecs <= 0) {
+        ERR("init: invalid quantum value");
+        return -1;
+    }
+
     // install wake handler
     sa_real.sa_handler = &wake;
 	if (sigaction(SIGALRM, &sa_real,NULL) < 0) {
@@ -299,6 +304,11 @@ int uthread_resume(int tid) {
 int uthread_sleep(unsigned int usec) {
     ENTER("sleep")
     PARAM("usec", usec)
+
+    if (usec <= 0) {
+        ERR("sleep: invalid sleep value");
+        return -1;
+    }
 
     int tid = uthread_get_tid();
     if (tid == 0) {
