@@ -75,7 +75,7 @@ void wake(int sig)
     int tid = wk->id;
     timeval old_tv = wk->awaken_tv;
     sleep_list.pop();
-
+    
     wake_up_info* next = sleep_list.peek();
     if (next != nullptr) {
         timeval new_tv = next->awaken_tv;
@@ -320,14 +320,14 @@ int uthread_sleep(unsigned int usec) {
 
     // adding the first timer
     if (wk == nullptr) {
+        sleep_list.add(tid, calc_wake_up_timeval(usec));
+        uthread_block(tid);
         timer.it_value.tv_sec = usec / 1000000;
 	    timer.it_value.tv_usec = usec % 1000000;
         if (setitimer (ITIMER_REAL, &timer, NULL)) {
             ERR("sleep: setitimer error.");
             return -1;
 	    }
-        sleep_list.add(tid, timer.it_value);
-        uthread_block(tid);
         MSG("sleep: first timer")
     
     } else {
