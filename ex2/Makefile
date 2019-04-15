@@ -37,3 +37,9 @@ testo:
 	$(CC) -o th_test test.cpp libuthreads.a
 	chmod 777 th_test
 	./th_test
+
+push:
+	make clean
+	git add -A
+	git commit --amend
+	git push
