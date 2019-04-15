@@ -320,9 +320,8 @@ int uthread_sleep(unsigned int usec) {
 
     // adding the first timer
     if (wk == nullptr) {
-        timeval wk_tv = calc_wake_up_timeval(usec);
-        timer.it_value.tv_sec = wk_tv.tv_sec;
-        timer.it_value.tv_usec = wk_tv.tv_usec;
+        timer.it_value.tv_sec = usec / 1000000;
+	    timer.it_value.tv_usec = usec % 1000000;
         if (setitimer (ITIMER_REAL, &timer, NULL)) {
             ERR("sleep: setitimer error.");
             return -1;
