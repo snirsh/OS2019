@@ -1,10 +1,26 @@
-#include "uthreads.h"
-#include <iostream>
-using namespace std;
+/*
+ * test1.cpp
+ *
+ *	test suspends and resume
+ *
+ *  Created on: Apr 6, 2015
+ *      Author: roigreenberg
+ */
 
-void foo() {
-    cout<<"## FOO ##"<<endl;
-}
+#include <stdio.h>
+#include <setjmp.h>
+#include <signal.h>
+#include <unistd.h>
+#include <sys/time.h>
+#include <stdlib.h>
+#include <deque>
+#include <list>
+#include <assert.h>
+#include "uthreads.h"
+//#include "libuthread.a"
+#include <iostream>
+
+using namespace std;
 
 void wait() {
     int k;
@@ -15,13 +31,34 @@ void wait() {
     }
 }
 
-int main(int argc, char* argv[]) {
-    cout<<endl<<"############### TESTING ###############"<<endl;
-    uthread_init(50000);
-    uthread_spawn(&foo);
-    uthread_spawn(&foo);
+void f (void)
+{
 
+}
+
+void g (void)
+{
+    
+}
+
+
+int main(void)
+{
+    if (uthread_init(100) == -1)
+    {
+        return 0;
+    }
+
+    uthread_spawn(f);
+    uthread_spawn(g);
+    wait();
+    uthread_block(1);
+    wait();
+    uthread_block(2);
+    wait();
+    uthread_resume(2);
+    wait();
+    uthread_resume(1);
 
     for(;;){}
-    return 0;
 }

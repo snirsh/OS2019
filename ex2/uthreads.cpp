@@ -66,7 +66,7 @@ void switch_threads(int sig)
         return;
     }
     // TODO: check ret val?
-    siglongjmp(*new_th->get_env(),1);
+    siglongjmp(*(new_th->get_env()), 1);
 }
 
 void wake(int sig)
@@ -230,7 +230,9 @@ int uthread_terminate(int tid) {
 */
 int uthread_block(int tid) {
     MSG("blocking tid " << tid)
-
+    if (tid == 2) {
+        MSG("bingo")
+    }
     if (tid > 99 || tid <= 0) {
         ERR("block: invalid tid")
         return -1;
@@ -248,9 +250,9 @@ int uthread_block(int tid) {
             switch_threads(0);
             set_vtimer();
     }
+    th->set_state(BLOCKED);
     ready_list.remove(th);
     blocked_list.push_front(th);
-    th->set_state(BLOCKED);
     return 0;
 }
 
