@@ -93,6 +93,7 @@ Thread* Thread::get_th(int tid) {
 void Thread::kill_all() {
     for (int i=0; i < MAX_THREAD_NUM; ++i) {
         if (th_map[i] != nullptr) {
-        th_map[i]->~Thread();
+            th_map[i]->~Thread();
+        }
     }
 }
