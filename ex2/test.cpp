@@ -20,6 +20,10 @@ int main(int argc, char* argv[]) {
     uthread_init(50000);
     uthread_spawn(&foo);
     uthread_spawn(&foo);
+    wait();
+    uthread_block(2);
+    wait();
+    uthread_block(2);
 
 
     for(;;){}
