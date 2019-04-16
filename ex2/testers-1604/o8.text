@@ -1,0 +1,64 @@
+in main id: 0 1
+Prog q count 1
+in f id: 1 1
+in g id: 2 1
+in z id: 3 1
+ z sleep for 0 usec
+in main id: 0 2
+Prog q count 5
+in f id: 1 2
+ f sleep for 100000 usec
+in g id: 2 2
+ g terminate  f
+in z id: 3 2
+in main id: 0 3
+Prog q count 9
+in g id: 2 3
+ g spawn new f
+in z id: 3 3
+in main id: 0 4
+Prog q count 12
+in f id: 1 1
+in g id: 2 4
+in z id: 3 4
+in main id: 0 5
+Prog q count 16
+in f id: 1 2
+in g id: 2 5
+in z id: 3 5
+in main id: 0 6
+Prog q count 20
+in f id: 1 3
+ f sleep for 1 sec
+in g id: 2 6
+ g sleep for 1 sec
+in z id: 3 6
+ z sleep for 1 sec
+in main id: 0 7
+Prog q count 24
+in f id: 1 4
+in g id: 2 7
+in z id: 3 7
+in main id: 0 17
+Prog q count 37
+in f id: 1 5
+in g id: 2 8
+in z id: 3 8
+in main id: 0 18
+Prog q count 41
+in f id: 1 6
+in g id: 2 9
+in z id: 3 9
+in main id: 0 19
+Prog q count 45
+in f id: 1 7
+in g id: 2 10
+in z id: 3 10
+in main id: 0 20
+Prog q count 49
+in f id: 1 8
+in g id: 2 11
+in z id: 3 11
+in main id: 0 21
+Prog q count 53
+ end of the program

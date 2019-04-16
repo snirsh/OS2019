@@ -1,0 +1,111 @@
+in main id: 0 1
+Prog q count 1
+in f id: 1 1
+in g id: 2 1
+in z id: 3 1
+in main id: 0 2
+Prog q count 5
+in f id: 1 2
+ f sleep for 1 sec
+in g id: 2 2
+ g try to wake f:
+in z id: 3 2
+in main id: 0 3
+Prog q count 9
+in g id: 2 3
+ g go to sleep for 3 sec:
+in z id: 3 3
+ z try to resume g but g is sleeping:
+in main id: 0 4
+Prog q count 12
+in z id: 3 4
+in main id: 0 5
+Prog q count 14
+in z id: 3 5
+in main id: 0 6
+Prog q count 16
+ main resume g but g is sleeping:
+in z id: 3 6
+ z block g:
+in main id: 0 7
+Prog q count 18
+in f id: 1 3
+in z id: 3 7
+in main id: 0 8
+Prog q count 21
+in f id: 1 4
+in z id: 3 8
+in main id: 0 9
+Prog q count 24
+in f id: 1 5
+in z id: 3 9
+in main id: 0 10
+Prog q count 27
+in f id: 1 6
+in z id: 3 10
+in main id: 0 11
+Prog q count 30
+in f id: 1 7
+ f sleep for 1 sec again
+in z id: 3 11
+in main id: 0 12
+Prog q count 33
+in z id: 3 12
+in main id: 0 13
+Prog q count 35
+ main terminated f
+in z id: 3 13
+in main id: 0 14
+Prog q count 37
+in z id: 3 14
+in main id: 0 15
+Prog q count 39
+in z id: 3 15
+in main id: 0 16
+Prog q count 41
+in z id: 3 16
+in main id: 0 17
+Prog q count 43
+in z id: 3 17
+in main id: 0 18
+Prog q count 45
+in z id: 3 18
+ z try to resume f
+ f doesnt exist
+ z create new f's
+in main id: 0 19
+Prog q count 47
+in f id: 1 1
+in z id: 3 19
+ z try to resume f
+ z create new f's
+in main id: 0 20
+Prog q count 50
+ main resume g:
+in f id: 1 2
+in z id: 3 20
+in g id: 2 4
+in main id: 0 21
+Prog q count 55
+in f id: 1 3
+in z id: 3 21
+in g id: 2 5
+in main id: 0 22
+Prog q count 60
+ main terminated f (1) 
+in f id: 4 3
+in z id: 3 22
+in g id: 2 6
+in main id: 0 23
+Prog q count 64
+in f id: 4 4
+in z id: 3 23
+in g id: 2 7
+in main id: 0 24
+Prog q count 68
+ main terminated g (2) 
+in f id: 4 5
+in z id: 3 24
+in main id: 0 25
+Prog q count 71
+ main terminated the main (end of prog) 
