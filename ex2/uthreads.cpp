@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <list>
 #include <map>
+#include <string>
 #include "uthreads.h"
 #include "thread.h"
 #include "sleeping_threads_list.h"
@@ -21,7 +22,7 @@ using namespace std;
 #define PARAM(p,v) //cout<<"## "<<p<<" = "<<v<<" ##"<<endl;
 #define EXIT(func) //cout<<"## exiting: "<<func<<" ##"<<endl<<endl;
 #define ERR(msg) cerr<<msg<<endl;
-#define MSG(msg) //gettimeofday(&now, nullptr); cout<<"[ "<<now.tv_sec<<"."<<now.tv_usec<<" ]  "<<msg<<endl;
+#define MSG(msg) gettimeofday(&now, nullptr); cout<<"[ "<<now.tv_sec<<"."<<now.tv_usec<<" ]  "<<msg<<endl;
 
 /* GLOBALS */
 timeval now;
@@ -63,6 +64,14 @@ void set_vtimer() {
     }
 }
 
+string get_ready() {
+    string str = "  ready: ";
+    for (Thread* t: ready_list) {
+        str += t->get_tid();
+        str += "->";
+    }
+}
+
 void switch_threads(int sig)
 {
     sig_block();
@@ -70,6 +79,8 @@ void switch_threads(int sig)
     if (ready_list.size() == 1) {
         ready_list.front()->inc_quantums();
         total_qu++;
+        MSG("                        SWITCH: (one ready) now running tid: " << ready_list.front()->get_tid()<<"  quantums: "<<ready_list.front()->get_quantums()<< "/"<<total_qu<<get_ready())
+        sig_unblock();
         return;
     }
 
@@ -84,7 +95,7 @@ void switch_threads(int sig)
     total_qu ++;
 
     int ret_val = sigsetjmp(*cur_th->get_env(),1);
-    MSG("                        SWITCH: now running tid: " << new_th->get_tid()<<"  quantums: "<<new_th->get_quantums()<< "/"<<total_qu)
+    MSG("                        SWITCH: now running tid: " << new_th->get_tid()<<"  quantums: "<<new_th->get_quantums()<< "/"<<total_qu<<get_ready())
     if (ret_val == 1) {
         return;
     }
