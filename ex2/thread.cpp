@@ -45,12 +45,9 @@ typedef unsigned int address_t;
 static Thread* th_map[MAX_THREAD_NUM];
 
 /* ctors */
-Thread::Thread() : quantums(0), cur_state(READY) {
-    fill_n(th_map, MAX_THREAD_NUM, nullptr);
-    th_map[0] = this;
-}
+
 Thread::Thread(void (*f)(void)) : quantums(0), cur_state(READY) {
-    for (int i=1; i < MAX_THREAD_NUM; i++) {
+    for (int i=0; i < MAX_THREAD_NUM; i++) {
         if (th_map[i] == nullptr) {
             tid = i;
             break;
