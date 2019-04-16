@@ -2,7 +2,7 @@ CC=g++
 CXX=g++
 RANLIB=ranlib
 
-LIBSRC=uthreads.cpp sleeping_threads_list.cpp thread.cpp
+LIBSRC=uthreads.cpp sleeping_threads_list.cpp sleeping_threads_list.h thread.cpp thread.h
 LIBOBJ=$(LIBSRC:.cpp=.o)
 
 INCS=-I.
@@ -34,6 +34,6 @@ tar:
 
 testo:
 	make
-	$(CC) -g -o testo test.cpp libuthreads.a
+	$(CC) -g -o testo t1.cpp libuthreads.a
 	chmod 777 testo
 	./testo

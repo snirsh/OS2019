@@ -21,8 +21,8 @@ using namespace std;
 #define ENTER(func) //cout<<"## entering: "<<func<<" ##"<<endl;
 #define PARAM(p,v) //cout<<"## "<<p<<" = "<<v<<" ##"<<endl;
 #define EXIT(func) //cout<<"## exiting: "<<func<<" ##"<<endl<<endl;
-#define ERR(msg) cerr<<msg<<endl;
-#define MSG(msg) gettimeofday(&now, nullptr); cout<<"[ "<<now.tv_sec<<"."<<now.tv_usec<<" ]  "<<msg<<endl;
+#define ERR(msg)// cerr<<msg<<endl;
+#define MSG(msg)// gettimeofday(&now, nullptr); cout<<"[ "<<now.tv_sec<<"."<<now.tv_usec<<" ]  "<<msg<<endl;
 
 /* GLOBALS */
 timeval now;
@@ -33,6 +33,7 @@ struct sigaction sa_virt = {0};
 struct itimerval timer;
 struct timeval quantum;
 int total_qu;
+static sigset_t set;
 
 /* inner funcs */
 void sig_block()
@@ -95,12 +96,11 @@ void switch_threads(int sig)
     new_th->inc_quantums();
     total_qu ++;
 
-    int ret_val = sigsetjmp(*cur_th->get_env(),1);
+    int ret_val = sigsetjmp(*cur_th->get_env(), 1);
     MSG("                        SWITCH: now running tid: " << new_th->get_tid()<<"  quantums: "<<new_th->get_quantums()<< "/"<<total_qu<<get_ready())
     if (ret_val == 1) {
         return;
     }
-    // TODO: check ret val?
     siglongjmp(*(new_th->get_env()), 1);
     sig_unblock();
 }
@@ -159,8 +159,7 @@ int uthread_init(int quantum_usecs) {
     }
 
     // set signals
-    if (sigemptyset(&sa_virt.sa_mask) || sigemptyset(&sa_real.sa_mask) ||
-        sigaddset(&sa_virt.sa_mask, SIGVTALRM) || sigaddset(&sa_real.sa_mask, SIGALRM))
+    if (sigemptyset(&set) || sigaddset(&set, SIGVTALRM) || sigaddset(&set, SIGALRM))
     {
         Thread::kill_all();
         ERR("init: sigset fail")
@@ -299,8 +298,9 @@ int uthread_block(int tid) {
         case BLOCKED:
             return 0;
         case RUNNING:
-            switch_threads(0);
+        case READY:
             set_vtimer();
+            switch_threads(0);
     }
     th->set_state(BLOCKED);
     ready_list.remove(th);

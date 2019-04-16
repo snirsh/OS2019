@@ -13,7 +13,7 @@ class Thread
 {
  private:
     int tid, quantums;
-    char stack[STACK_SIZE];
+    char* stack;
     State cur_state;
     sigjmp_buf env;
  public:
