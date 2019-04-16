@@ -54,6 +54,7 @@ Thread::Thread(void (*f)(void)) : quantums(0), cur_state(READY) {
         }
     }
     th_map[tid] = this;
+    if (tid==0) {quantums ++;}
     
     address_t sp, pc;
     sp = (address_t)stack + STACK_SIZE - sizeof(address_t);
