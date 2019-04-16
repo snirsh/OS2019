@@ -145,7 +145,7 @@ int uthread_init(int quantum_usecs) {
         ERR("init: invalid quantum value");
         return -1;
     }
-    
+
     // set signals
     if (sigemptyset(&sa_virt.sa_mask) || sigemptyset(&sa_real.sa_mask) ||
         sigaddset(&sa_virt.sa_mask, SIGVTALRM) || sigaddset(&sa_real.sa_mask, SIGALRM))
@@ -172,7 +172,7 @@ int uthread_init(int quantum_usecs) {
 	quantum.tv_usec = quantum_usecs % 1000000;
 
     // create main thread
-    Thread* main_th = new Thread();
+    Thread* main_th = new Thread(0);
     if (main_th == nullptr) {
         ERR("init: can't create main thread")
         return -1;

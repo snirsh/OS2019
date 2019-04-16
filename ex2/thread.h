@@ -17,7 +17,6 @@ class Thread
     State cur_state;
     sigjmp_buf env;
  public:
-    Thread();
     Thread(void (*f)(void));
     ~Thread();
     int get_quantums() {return quantums;}
