@@ -43,20 +43,16 @@ typedef unsigned int address_t;
 #endif
 
 static Thread* th_map[MAX_THREAD_NUM];
-static bool av_tids[MAX_THREAD_NUM];
 
 /* ctors */
 Thread::Thread() : quantums(0), cur_state(READY) {
-    fill_n(av_tids, MAX_THREAD_NUM, true);
     fill_n(th_map, MAX_THREAD_NUM, nullptr);
-    av_tids[0] = false;
     th_map[0] = this;
 }
 Thread::Thread(void (*f)(void)) : quantums(0), cur_state(READY) {
     for (int i=1; i < MAX_THREAD_NUM; i++) {
-        if (av_tids[i] == true) {
+        if (th_map[i] == nullptr) {
             tid = i;
-            av_tids[i] = false;
             break;
         }
     }
@@ -80,13 +76,11 @@ Thread::Thread(void (*f)(void)) : quantums(0), cur_state(READY) {
 }
 
 Thread::~Thread() {
-    av_tids[tid] = true;
     th_map[tid] = nullptr;
 }
 
 /* funcs */
 Thread* Thread::get_th(int tid) {
-    // return nullptr?
     return th_map[tid];
 }
 

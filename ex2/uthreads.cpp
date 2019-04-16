@@ -34,6 +34,27 @@ struct timeval quantum;
 int total_qu;
 
 /* inner funcs */
+void sig_block()
+{
+    if (sigprocmask(SIG_BLOCK, &sa_virt.sa_mask, nullptr) ||
+        sigprocmask(SIG_BLOCK, &sa_real.sa_mask, nullptr))
+    {
+        Thread::kill_all();
+        ERR("signal mask failed with error number "<<errno)
+        exit(1);
+    }
+}
+
+void sig_unblock() {
+    if (sigprocmask(SIG_UNBLOCK, &sa_virt.sa_mask, nullptr) ||
+        sigprocmask(SIG_UNBLOCK, &sa_real.sa_mask, nullptr))
+    {
+        Thread::kill_all();
+        ERR("signal mask failed with error number "<<errno)
+        exit(1);
+    }
+}
+
 void set_vtimer() {
     timer.it_value = quantum;
     timer.it_interval = quantum;
@@ -44,6 +65,7 @@ void set_vtimer() {
 
 void switch_threads(int sig)
 {
+    sig_block();
     // in case of only one thread running
     if (ready_list.size() == 1) {
         ready_list.front()->inc_quantums();
@@ -67,10 +89,12 @@ void switch_threads(int sig)
     }
     // TODO: check ret val?
     siglongjmp(*(new_th->get_env()), 1);
+    sig_unblock();
 }
 
 void wake(int sig)
 {
+    sig_block();
     wake_up_info* wk = sleep_list.peek();
     int tid = wk->id;
     MSG("wake: waking up tid " << tid)
@@ -89,6 +113,7 @@ void wake(int sig)
         }
     } else {MSG("wake: sleep list empty")}
     uthread_resume(tid);
+    sig_unblock();
 }
 
 timeval calc_wake_up_timeval(int usecs_to_sleep)
@@ -162,6 +187,7 @@ int uthread_init(int quantum_usecs) {
  * On failure, return -1.
 */
 int uthread_spawn(void (*f)(void)) {
+    sig_block();
     MSG("spawning a new thread for func " << f)
 
     Thread* new_th = new Thread(f);
@@ -172,6 +198,7 @@ int uthread_spawn(void (*f)(void)) {
     ready_list.push_back(new_th);
 
     MSG("spawn: new tid = "<<new_th->get_tid())
+    sig_unblock();
     return new_th->get_tid();
 }
 
@@ -187,6 +214,7 @@ int uthread_spawn(void (*f)(void)) {
  * thread is terminated, the function does not return.
 */
 int uthread_terminate(int tid) {
+    sig_block();
     MSG("terminating " << tid)
     if (tid > 99 || tid < 0) {
         ERR("terminate: inavlid tid")
@@ -215,7 +243,8 @@ int uthread_terminate(int tid) {
         case BLOCKED:
             blocked_list.remove(th);
     }
-    th->~Thread();    
+    th->~Thread();  
+    sig_unblock();  
     return 0;
 }
 
@@ -229,6 +258,7 @@ int uthread_terminate(int tid) {
  * Return value: On success, return 0. On failure, return -1.
 */
 int uthread_block(int tid) {
+    sig_block();
     MSG("blocking tid " << tid)
     if (tid == 2) {
         MSG("bingo")
@@ -253,6 +283,7 @@ int uthread_block(int tid) {
     th->set_state(BLOCKED);
     ready_list.remove(th);
     blocked_list.push_front(th);
+    sig_unblock();
     return 0;
 }
 
@@ -264,6 +295,7 @@ int uthread_block(int tid) {
  * Return value: On success, return 0. On failure, return -1.
 */
 int uthread_resume(int tid) {
+    sig_block();
     MSG("resuming tid " << tid)
 
     if (tid > 99 || tid < 0) {
@@ -281,6 +313,7 @@ int uthread_resume(int tid) {
         ready_list.push_back(th);
         th->set_state(READY);
     }
+    sig_unblock();
     return 0;
 
 }
@@ -293,7 +326,7 @@ int uthread_resume(int tid) {
  * Return value: On success, return 0. On failure, return -1.
 */
 int uthread_sleep(unsigned int usec) {
-
+    sig_block();
     if (usec <= 0) {
         ERR("sleep: invalid sleep value");
         return -1;
@@ -338,6 +371,7 @@ int uthread_sleep(unsigned int usec) {
         }
     }
     set_vtimer();
+    sig_unblock();
     return 0;
 }
 
@@ -373,7 +407,7 @@ int uthread_get_total_quantums() {
  * 			     On failure, return -1.
 */
 int uthread_get_quantums(int tid) {
-
+    sig_block();
     if (tid > 99 || tid < 0) {
         ERR("get_qu: invalid tid")
         return -1;
@@ -383,6 +417,6 @@ int uthread_get_quantums(int tid) {
         ERR("get_qu: no such thread")
         return -1;
     }
+    sig_unblock();
     return th->get_quantums();
-
 }
