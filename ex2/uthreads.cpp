@@ -69,6 +69,7 @@ void switch_threads(int sig)
     // in case of only one thread running
     if (ready_list.size() == 1) {
         ready_list.front()->inc_quantums();
+        total_qu++;
         return;
     }
 
