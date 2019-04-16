@@ -145,6 +145,15 @@ int uthread_init(int quantum_usecs) {
         ERR("init: invalid quantum value");
         return -1;
     }
+    
+    // set signals
+    if (sigemptyset(&sa_virt.sa_mask) || sigemptyset(&sa_real.sa_mask) ||
+        sigaddset(&sa_virt.sa_mask, SIGVTALRM) || sigaddset(&sa_real.sa_mask, SIGALRM))
+    {
+        Thread::kill_all();
+        ERR("init: sigset fail")
+        exit(1);
+    }
 
     // install wake handler
     sa_real.sa_handler = &wake;
