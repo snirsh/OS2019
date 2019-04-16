@@ -33,12 +33,12 @@ void wait() {
 
 void f (void)
 {
-
+    while(1){}
 }
 
 void g (void)
 {
-    
+    while(1){}
 }
 
 

@@ -67,9 +67,10 @@ void set_vtimer() {
 string get_ready() {
     string str = "  ready: ";
     for (Thread* t: ready_list) {
-        str += t->get_tid();
+        str += to_string(t->get_tid());
         str += "->";
     }
+    return str;
 }
 
 void switch_threads(int sig)
