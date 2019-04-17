@@ -35,7 +35,7 @@ static sigset_t set;
 /* inner funcs */
 void sig_block()
 {
-    if (sigprocmask(SIG_BLOCK, &set, nullptr) {
+    if (sigprocmask(SIG_BLOCK, &set, nullptr)) {
         Thread::kill_all();
         ERR_SYS("sig_block: sigprocmask error")
         exit(1);
@@ -43,7 +43,7 @@ void sig_block()
 }
 
 void sig_unblock() {
-    if (sigprocmask(SIG_UNBLOCK, &set, nullptr) {
+    if (sigprocmask(SIG_UNBLOCK, &set, nullptr)) {
         Thread::kill_all();
         ERR_SYS("sig_unblock: sigprocmask error")
         exit(1);
@@ -85,11 +85,7 @@ void switch_threads(int sig)
         ERR_SYS("switch: sigsetjmp error");
         exit(1);
     }
-    ret_val = siglongjmp(*(new_th->get_env()), 1);
-    if (ret_val != 0) {
-        ERR_SYS("switch: siglongmp error");
-        exit(1);
-    }
+    siglongjmp(*(new_th->get_env()), 1);
     sig_unblock();
 }
 
