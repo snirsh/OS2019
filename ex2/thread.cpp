@@ -4,6 +4,8 @@
 #include <setjmp.h>
 using namespace std;
 
+#define ERR_SYS(msg) cerr << "system error: " << msg << endl;
+
 typedef unsigned long address_t;
 #ifdef __x86_64__
 /* code for 64 bit Intel arch */
@@ -61,15 +63,16 @@ Thread::Thread(void (*f)(void)) : quantums(0), cur_state(READY) {
     pc = (address_t)f;
     int ret_val = sigsetjmp(env, 1);
     if (ret_val != 0) {
-        cout<<"thread init: sigsetjmp error";
+        ERR_SYS("thread init: sigsetjmp error")
+        exit(1);
     }
     (env->__jmpbuf)[JB_SP] = translate_address(sp);
     (env->__jmpbuf)[JB_PC] = translate_address(pc);
     ret_val = sigemptyset(&env->__saved_mask); 
     if (ret_val != 0) {
-        cout<<"thread init: sigemptyset error";
+        ERR_SYS("thread init: sigemptyset error")
+        exit(1);
     }
-
 }
 
 Thread::~Thread() {

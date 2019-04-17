@@ -18,11 +18,8 @@ using namespace std;
 #define MAX_THREAD_NUM 100 /* maximal number of threads */
 #define STACK_SIZE 4096 /* stack size per thread (in bytes) */
 
-#define ENTER(func) //cout<<"## entering: "<<func<<" ##"<<endl;
-#define PARAM(p,v) //cout<<"## "<<p<<" = "<<v<<" ##"<<endl;
-#define EXIT(func) //cout<<"## exiting: "<<func<<" ##"<<endl<<endl;
-#define ERR(msg)// cerr<<msg<<endl;
-#define MSG(msg)// gettimeofday(&now, nullptr); cout<<"[ "<<now.tv_sec<<"."<<now.tv_usec<<" ]  "<<msg<<endl;
+#define ERR_SYS(msg) cerr << "system error: " << msg << endl;
+#define ERR_LIB(msg) cerr << "thread library error: " << msg << endl;
 
 /* GLOBALS */
 timeval now;
@@ -38,21 +35,17 @@ static sigset_t set;
 /* inner funcs */
 void sig_block()
 {
-    if (sigprocmask(SIG_BLOCK, &sa_virt.sa_mask, nullptr) ||
-        sigprocmask(SIG_BLOCK, &sa_real.sa_mask, nullptr))
-    {
+    if (sigprocmask(SIG_BLOCK, &set, nullptr) {
         Thread::kill_all();
-        ERR("signal mask failed with error number "<<errno)
+        ERR_SYS("sig_block: sigprocmask error")
         exit(1);
     }
 }
 
 void sig_unblock() {
-    if (sigprocmask(SIG_UNBLOCK, &sa_virt.sa_mask, nullptr) ||
-        sigprocmask(SIG_UNBLOCK, &sa_real.sa_mask, nullptr))
-    {
+    if (sigprocmask(SIG_UNBLOCK, &set, nullptr) {
         Thread::kill_all();
-        ERR("signal mask failed with error number "<<errno)
+        ERR_SYS("sig_unblock: sigprocmask error")
         exit(1);
     }
 }
@@ -61,17 +54,9 @@ void set_vtimer() {
     timer.it_value = quantum;
     timer.it_interval = quantum;
     if (setitimer (ITIMER_VIRTUAL, &timer, NULL)) {
-        ERR("set_vtimer: setitimer error.");
+        ERR_SYS("set_vtimer: setitimer error");
+        exit(1);
     }
-}
-
-string get_ready() {
-    string str = "  ready: ";
-    for (Thread* t: ready_list) {
-        str += to_string(t->get_tid());
-        str += "->";
-    }
-    return str;
 }
 
 void switch_threads(int sig)
@@ -81,7 +66,6 @@ void switch_threads(int sig)
     if (ready_list.size() == 1) {
         ready_list.front()->inc_quantums();
         total_qu++;
-        MSG("                        SWITCH: (one ready) now running tid: " << ready_list.front()->get_tid()<<"  quantums: "<<ready_list.front()->get_quantums()<< "/"<<total_qu<<get_ready())
         sig_unblock();
         return;
     }
@@ -97,11 +81,15 @@ void switch_threads(int sig)
     total_qu ++;
 
     int ret_val = sigsetjmp(*cur_th->get_env(), 1);
-    MSG("                        SWITCH: now running tid: " << new_th->get_tid()<<"  quantums: "<<new_th->get_quantums()<< "/"<<total_qu<<get_ready())
-    if (ret_val == 1) {
-        return;
+    if (ret_val != 0) {
+        ERR_SYS("switch: sigsetjmp error");
+        exit(1);
     }
-    siglongjmp(*(new_th->get_env()), 1);
+    ret_val = siglongjmp(*(new_th->get_env()), 1);
+    if (ret_val != 0) {
+        ERR_SYS("switch: siglongmp error");
+        exit(1);
+    }
     sig_unblock();
 }
 
@@ -110,21 +98,20 @@ void wake(int sig)
     sig_block();
     wake_up_info* wk = sleep_list.peek();
     int tid = wk->id;
-    MSG("wake: waking up tid " << tid)
     timeval old_tv = wk->awaken_tv;
     sleep_list.pop();
     
     wake_up_info* next = sleep_list.peek();
     if (next != nullptr) {
-        MSG("wake: next in sleep list: tid " << next->id)
         timeval new_tv = next->awaken_tv;
         timersub(&new_tv, &old_tv, &timer.it_value);
         timer.it_interval.tv_sec = 1000000;
 	    timer.it_interval.tv_usec = 0;
         if (setitimer (ITIMER_REAL, &timer, NULL)) {
-            ERR("wake: setitimer error.");
+            ERR_SYS("wake: setitimer error");
+            exit(1);
         }
-    } else {MSG("wake: sleep list empty")}
+    }
     uthread_resume(tid);
     sig_unblock();
 }
@@ -150,11 +137,9 @@ timeval calc_wake_up_timeval(int usecs_to_sleep)
  * Return value: On success, return 0. On failure, return -1.
 */
 int uthread_init(int quantum_usecs) {
-    MSG("init")
-    PARAM("quantum_usecs", quantum_usecs)
 
     if (quantum_usecs <= 0) {
-        ERR("init: invalid quantum value");
+        ERR_LIB("init: invalid quantum value");
         return -1;
     }
 
@@ -162,20 +147,22 @@ int uthread_init(int quantum_usecs) {
     if (sigemptyset(&set) || sigaddset(&set, SIGVTALRM) || sigaddset(&set, SIGALRM))
     {
         Thread::kill_all();
-        ERR("init: sigset fail")
+        ERR_SYS("init: sigset error")
         exit(1);
     }
 
     // install wake handler
     sa_real.sa_handler = &wake;
 	if (sigaction(SIGALRM, &sa_real,NULL) < 0) {
-		ERR("init: sigaction error (real)");
+		ERR_SYS("init: sigaction error (real)");
+        exit(1);
 	}
 
     // install virtual timer handler
     sa_virt.sa_handler = &switch_threads;
 	if (sigaction(SIGVTALRM, &sa_virt,NULL) < 0) {
-		ERR("init: sigaction error (virtual)");
+		ERR_SYS("init: sigaction error (virtual)");
+        exit(1);
 	}
 
     // configure quantum timeval
@@ -185,7 +172,7 @@ int uthread_init(int quantum_usecs) {
     // create main thread
     Thread* main_th = new Thread(0);
     if (main_th == nullptr) {
-        ERR("init: can't create main thread")
+        ERR_LIB("init: can't create main thread")
         return -1;
     }
     ready_list.push_front(main_th);
@@ -209,16 +196,12 @@ int uthread_init(int quantum_usecs) {
 */
 int uthread_spawn(void (*f)(void)) {
     sig_block();
-    MSG("spawning a new thread for func " << f)
-
     Thread* new_th = new Thread(f);
     if (new_th == nullptr) {
-        ERR("spawn: can't spawn new thread")
+        ERR_LIB("spawn: can't spawn new thread")
         return -1;
     }
     ready_list.push_back(new_th);
-
-    MSG("spawn: new tid = "<<new_th->get_tid())
     sig_unblock();
     return new_th->get_tid();
 }
@@ -236,13 +219,12 @@ int uthread_spawn(void (*f)(void)) {
 */
 int uthread_terminate(int tid) {
     sig_block();
-    MSG("terminating " << tid)
     if (tid > 99 || tid < 0) {
-        ERR("terminate: inavlid tid")
+        ERR_LIB("terminate: inavlid tid")
+        sig_unblock();
         return -1;
     }
     if (tid == 0) {
-        MSG("terminating main thread")
         Thread::kill_all();
         ready_list.clear();
         blocked_list.clear();
@@ -250,7 +232,8 @@ int uthread_terminate(int tid) {
     }
     Thread* th = Thread::get_th(tid);
     if (th == nullptr) {
-        ERR("terminate: no such thread")
+        ERR_LIB("terminate: no such thread")
+        sig_unblock();
         return -1;
     }
     State st = th->get_state();
@@ -280,22 +263,21 @@ int uthread_terminate(int tid) {
 */
 int uthread_block(int tid) {
     sig_block();
-    MSG("blocking tid " << tid)
-    if (tid == 2) {
-        MSG("bingo")
-    }
     if (tid > 99 || tid <= 0) {
-        ERR("block: invalid tid")
+        ERR_LIB("block: invalid tid")
+        sig_unblock();
         return -1;
     }
     Thread* th = Thread::get_th(tid);
     if (th == nullptr) {
-        ERR("block: no such thread")
+        ERR_LIB("block: no such thread")
+        sig_unblock();
         return -1;
     }
     State st = th->get_state();
     switch(st) {
         case BLOCKED:
+            sig_unblock();
             return 0;
         case RUNNING:
         case READY:
@@ -318,15 +300,15 @@ int uthread_block(int tid) {
 */
 int uthread_resume(int tid) {
     sig_block();
-    MSG("resuming tid " << tid)
-
     if (tid > 99 || tid < 0) {
-        ERR("resume: invalid tid")
+        ERR_LIB("resume: invalid tid")
+        sig_unblock();
         return -1;
     }
     Thread* th = Thread::get_th(tid);
     if (th == nullptr) {
-        ERR("resume: no such thread")
+        ERR_LIB("resume: no such thread")
+        sig_unblock();
         return -1;
     }
     State st = th->get_state();
@@ -350,14 +332,14 @@ int uthread_resume(int tid) {
 int uthread_sleep(unsigned int usec) {
     sig_block();
     if (usec <= 0) {
-        ERR("sleep: invalid sleep value");
+        ERR_LIB("sleep: invalid sleep value");
+        sig_unblock();
         return -1;
     }
-
     int tid = uthread_get_tid();
-    MSG("sleeping "<<tid<<" for "<<usec)
     if (tid == 0) {
-        ERR("sleep: can't sleep main")
+        ERR_LIB("sleep: can't sleep main")
+        sig_unblock();
         return -1;
     }
     
@@ -365,7 +347,6 @@ int uthread_sleep(unsigned int usec) {
 
     // adding the first timer
     if (wk == nullptr) {
-        MSG("sleep: setting first timer")
         sleep_list.add(tid, calc_wake_up_timeval(usec));
         uthread_block(tid);
         timer.it_value.tv_sec = usec / 1000000;
@@ -373,8 +354,8 @@ int uthread_sleep(unsigned int usec) {
         timer.it_interval.tv_sec = 1000000;
 	    timer.it_interval.tv_usec = 0;
         if (setitimer (ITIMER_REAL, &timer, NULL)) {
-            ERR("sleep: setitimer error.");
-            return -1;
+            ERR_SYS("sleep: setitimer error");
+            exit(1);
 	    }
     
     } else {
@@ -382,13 +363,12 @@ int uthread_sleep(unsigned int usec) {
         uthread_block(tid);
         wk = sleep_list.peek();
         if (wk->id == tid) {
-            MSG("sleep: setting not first timer")
             timeval wk_tv = calc_wake_up_timeval(usec);
             timer.it_value.tv_sec = wk_tv.tv_sec;
             timer.it_value.tv_usec = wk_tv.tv_usec;
             if (setitimer (ITIMER_REAL, &timer, NULL)) {
-                ERR("sleep: setitimer error.")
-                return -1;
+                ERR_SYS("sleep: setitimer error");
+                exit(1);
             }
         }
     }
@@ -429,16 +409,14 @@ int uthread_get_total_quantums() {
  * 			     On failure, return -1.
 */
 int uthread_get_quantums(int tid) {
-    sig_block();
     if (tid > 99 || tid < 0) {
-        ERR("get_qu: invalid tid")
+        ERR_LIB("get_quantums: invalid tid")
         return -1;
     }
     Thread* th = Thread::get_th(tid);
     if (th == nullptr) {
-        ERR("get_qu: no such thread")
+        ERR_LIB("get_quantums: no such thread")
         return -1;
     }
-    sig_unblock();
     return th->get_quantums();
 }
