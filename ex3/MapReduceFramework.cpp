@@ -12,10 +12,13 @@ struct JobState {
 	float percentage;
 };
 struct JobContext {
-	JobState state;
+	int level;
+	pthread_t* threads;
+	JobState* state;
 	Barrier* barrier;
 	const MapReduceClient* client;
 	const InputVec* input_vec;
+	IntermediateVec* inter_vec;
 	OutputVec* output_vec;
 };
 struct ThreadContext {
@@ -49,24 +52,30 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 							int multiThreadLevel)
 {
 	pthread_t threads[multiThreadLevel];
-	ThreadContext contexts[multiThreadLevel];
+	ThreadContext t_con[multiThreadLevel];
 	Barrier barrier(multiThreadLevel);
+	JobState js = {stage_t(0),0};
+	IntermediateVec* inter_vec = new IntermediateVec();
+	JobContext jc = {multiThreadLevel, threads, &js, &barrier, &client, &inputVec, inter_vec, &outputVec};
 
 	for (int i = 0; i < multiThreadLevel; ++i) {
-		contexts[i] = {i, &barrier, &client, &inputVec, &outputVec};
+		t_con[i] = {i, &jc};
 	}
 	for (int i = 0; i < multiThreadLevel; ++i) {
-		pthread_create(&threads[i], NULL, do_work, &contexts[i]);
+		pthread_create(&threads[i], NULL, do_work, &t_con[i]);
 	}
-	for (int i = 0; i < multiThreadLevel; ++i) {
-		pthread_join(threads[i], NULL);
-	}
-	return 0;
+	return &jc;
 }
 
+void waitForJob(JobHandle job) {
+	int level = ((JobContext*)job)->level;
+	pthread_t* threads = ((JobContext*)job)->threads;
+	for (int i = 0; i < level; ++i) {
+		pthread_join(threads[i], NULL);
+	}
+}
 void emit2 (K2* key, V2* value, void* context);
 void emit3 (K3* key, V3* value, void* context);
-void waitForJob(JobHandle job);
 void getJobState(JobHandle job, JobState* state);
 void closeJobHandle(JobHandle job);
 	
