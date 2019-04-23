@@ -74,8 +74,20 @@ void waitForJob(JobHandle job) {
 		pthread_join(threads[i], NULL);
 	}
 }
-void emit2 (K2* key, V2* value, void* context);
-void emit3 (K3* key, V3* value, void* context);
+void emit2 (K2* key, V2* value, void* context)
+{
+	IntermediatePair p = new IntermediatePair(key, value);
+	pthread_mutex_lock(*context.mutex1);
+	context.inter_vec.insert(p);
+	pthread_mutex_unlock(*context.mutex1);
+}
+
+void emit3 (K3* key, V3* value, void* context){
+	IntermediatePair p = new IntermediatePair(key, value);
+	pthread_mutex_lock(*context.mutex2);
+	context.output_vec.insert(p);
+	pthread_mutex_unlock(*context.mutex2);
+}
 void getJobState(JobHandle job, JobState* state);
 void closeJobHandle(JobHandle job);
 	
