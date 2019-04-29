@@ -64,7 +64,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 	JobState js = {stage_t(0),0};
 	pthread_t threads[multiThreadLevel];
 	ThreadContext t_con[multiThreadLevel];
-	Barrier barrier(multiThreadLevel);
+	Barrier* barrier = new Barrier(multiThreadLevel);
 
 	pthread_mutex_t mutex1, mutex2;
 	if (pthread_mutex_init(&mutex1, NULL) || pthread_mutex_init(&mutex2, NULL)) {
@@ -85,7 +85,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 	int* temp = (int*) &atomic_state;
 	*temp = inputVec.size();
 
-	JobContext* jc = new JobContext({multiThreadLevel, threads, &js, &barrier, &client,
+	JobContext* jc = new JobContext({multiThreadLevel, threads, &js, barrier, &client,
 					 &inputVec, inter_vec, &outputVec, &mutex1, &mutex2, &sema, &atomic_state});
 
 	for (int i = 0; i < multiThreadLevel; ++i) {
