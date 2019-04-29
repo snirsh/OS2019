@@ -1,9 +1,11 @@
 #include <pthread.h>
-#include <cstdio>
+#include <semaphore.h>
+#include <iostream>
 #include "MapReduceClient.h"
 #include "Barrier.h"
 
 // DEFS
+#define ERR(msg) std::cerr << msg << std::endl; exit(1);
 typedef void* JobHandle;
 enum stage_t {UNDEFINED_STAGE=0, MAP_STAGE=1, REDUCE_STAGE=2};
 
@@ -20,7 +22,8 @@ struct JobContext {
 	const InputVec* input_vec;
 	IntermediateVec* inter_vec;
 	OutputVec* output_vec;
-	pthread_mutex_t mutex1, mutex2;
+	pthread_mutex_t *mutex1, *mutex2;
+	sem_t *sema;
 };
 struct ThreadContext {
 	int tid;
@@ -30,7 +33,7 @@ struct ThreadContext {
 // FUNCS
 void* do_work(void* arg)
 {
-	ThreadContext* tc = (ThreadContext*) arg;
+	ThreadContext* tc = (ThreadContext*)arg;
 	int tid = tc->tid;
 	JobContext* jc = tc->jc;
 
@@ -52,14 +55,28 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 							const InputVec& inputVec, OutputVec& outputVec,
 							int multiThreadLevel)
 {
+	JobState js = {stage_t(0),0};
 	pthread_t threads[multiThreadLevel];
 	ThreadContext t_con[multiThreadLevel];
 	Barrier barrier(multiThreadLevel);
-	JobState js = {stage_t(0),0};
-	pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
-	pthread_mutex_t mutex2 = PTHREAD_MUTEX_INITIALIZER;
+
+	pthread_mutex_t mutex1, mutex2;
+	if (pthread_mutex_init(&mutex1, NULL) || pthread_mutex_init(&mutex2, NULL)) {
+		ERR("error in mutex init")
+	}
+
 	IntermediateVec* inter_vec = new IntermediateVec();
-	JobContext jc = {multiThreadLevel, threads, &js, &barrier, &client, &inputVec, inter_vec, &outputVec, mutex1, mutex2};
+	if (inter_vec == nullptr) {
+		ERR("error in inter_vec init")
+	}
+
+	sem_t sema;
+	if (sem_init(&sema, 0, 0)) {
+		ERR("error in semaphore init")
+	}
+
+	JobContext jc = {multiThreadLevel, threads, &js, &barrier, &client,
+					 &inputVec, inter_vec, &outputVec, &mutex1, &mutex2, &sema};
 
 	for (int i = 0; i < multiThreadLevel; ++i) {
 		t_con[i] = {i, &jc};
@@ -80,21 +97,39 @@ void emit2 (K2* key, V2* value, void* context)
 	IntermediatePair p = IntermediatePair(key, value);
 	JobContext* jc = (JobContext*)context;
 	IntermediateVec vec = *(jc->inter_vec);
-	pthread_mutex_lock(&(jc->mutex1));
+	pthread_mutex_lock(jc->mutex1);
 	auto it = vec.begin();
 	vec.insert(it, p);
-	pthread_mutex_unlock(&(jc->mutex1));
+	pthread_mutex_unlock(jc->mutex1);
 }
 
 void emit3 (K3* key, V3* value, void* context){
 	OutputPair p = OutputPair(key, value);
 	JobContext* jc = (JobContext*)context;
 	OutputVec vec = *(jc->output_vec);
-	pthread_mutex_lock(&(jc->mutex2));
+	pthread_mutex_lock(jc->mutex2);
 	auto it = vec.begin();
 	vec.insert(it, p);
-	pthread_mutex_unlock(&(jc->mutex2));
+	pthread_mutex_unlock(jc->mutex2);
 }
+
 void getJobState(JobHandle job, JobState* state);
-void closeJobHandle(JobHandle job);
+
+void closeJobHandle(JobHandle job) {
+	JobContext* jc = (JobContext*)job;
+	if (pthread_mutex_destroy(jc->mutex1) || pthread_mutex_destroy(jc->mutex2)) {
+		ERR("error in mutex destroy")
+	}
+	if (sem_destroy(jc->sema)) {
+		ERR("error in semaphore destroy")
+	}
+	jc->barrier->~Barrier();
+
+	for (auto it = jc->inter_vec->begin(); it != jc->inter_vec->end(); ++it) {
+		it->first->~K2();
+		it->second->~V2();
+	}
+	jc->inter_vec->clear();
+	jc->inter_vec->~vector();
+}
 	
