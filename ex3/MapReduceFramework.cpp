@@ -5,7 +5,7 @@
 #include "Barrier.h"
 
 // DEFS
-#define ERR(msg) std::cerr << msg << std::endl; exit(1);
+#define ERR(msg) std::cerr << "error: " << msg << std::endl; exit(1);
 typedef void* JobHandle;
 enum stage_t {UNDEFINED_STAGE=0, MAP_STAGE=1, REDUCE_STAGE=2};
 
@@ -62,17 +62,17 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 
 	pthread_mutex_t mutex1, mutex2;
 	if (pthread_mutex_init(&mutex1, NULL) || pthread_mutex_init(&mutex2, NULL)) {
-		ERR("error in mutex init")
+		ERR("mutex init")
 	}
 
 	IntermediateVec* inter_vec = new IntermediateVec();
 	if (inter_vec == nullptr) {
-		ERR("error in inter_vec init")
+		ERR("inter_vec init")
 	}
 
 	sem_t sema;
 	if (sem_init(&sema, 0, 0)) {
-		ERR("error in semaphore init")
+		ERR("semaphore init")
 	}
 
 	JobContext jc = {multiThreadLevel, threads, &js, &barrier, &client,
@@ -92,6 +92,7 @@ void waitForJob(JobHandle job) {
 		pthread_join(threads[i], NULL);
 	}
 }
+
 void emit2 (K2* key, V2* value, void* context)
 {
 	IntermediatePair p = IntermediatePair(key, value);
@@ -118,10 +119,10 @@ void getJobState(JobHandle job, JobState* state);
 void closeJobHandle(JobHandle job) {
 	JobContext* jc = (JobContext*)job;
 	if (pthread_mutex_destroy(jc->mutex1) || pthread_mutex_destroy(jc->mutex2)) {
-		ERR("error in mutex destroy")
+		ERR("mutex destroy")
 	}
 	if (sem_destroy(jc->sema)) {
-		ERR("error in semaphore destroy")
+		ERR("semaphore destroy")
 	}
 	jc->barrier->~Barrier();
 
