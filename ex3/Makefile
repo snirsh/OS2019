@@ -34,6 +34,6 @@ tar:
 
 testo:
 	make
-	$(CC) -g -o testo SampleClient.cpp libMapReduceFramework.a
+	$(CC) -pthread -g -o testo SampleClient.cpp libMapReduceFramework.a
 	chmod 777 testo
 	./testo
