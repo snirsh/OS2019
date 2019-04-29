@@ -1,6 +1,8 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <iostream>
+#include <cstdlib>
+#include <atomic>
 #include "MapReduceClient.h"
 #include "Barrier.h"
 
@@ -9,11 +11,13 @@
 typedef void* JobHandle;
 enum stage_t {UNDEFINED_STAGE=0, MAP_STAGE=1, REDUCE_STAGE=2};
 
-struct JobState {
+struct JobState
+{
 	stage_t stage;
 	float percentage;
 };
-struct JobContext {
+struct JobContext
+{
 	int level;
 	pthread_t* threads;
 	JobState* state;
@@ -24,8 +28,10 @@ struct JobContext {
 	OutputVec* output_vec;
 	pthread_mutex_t *mutex1, *mutex2;
 	sem_t *sema;
+	std::atomic<double>* atomic_state;
 };
-struct ThreadContext {
+struct ThreadContext
+{
 	int tid;
 	JobContext* jc;
 };
@@ -75,8 +81,12 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 		ERR("semaphore init")
 	}
 
+    std::atomic<double> atomic_state(0);
+	int* temp = (int*) &atomic_state;
+	*temp = inputVec.size();
+
 	JobContext jc = {multiThreadLevel, threads, &js, &barrier, &client,
-					 &inputVec, inter_vec, &outputVec, &mutex1, &mutex2, &sema};
+					 &inputVec, inter_vec, &outputVec, &mutex1, &mutex2, &sema, &atomic_state};
 
 	for (int i = 0; i < multiThreadLevel; ++i) {
 		t_con[i] = {i, &jc};
@@ -85,7 +95,8 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 	return &jc;
 }
 
-void waitForJob(JobHandle job) {
+void waitForJob(JobHandle job)
+{
 	int level = ((JobContext*)job)->level;
 	pthread_t* threads = ((JobContext*)job)->threads;
 	for (int i = 0; i < level; ++i) {
@@ -104,7 +115,8 @@ void emit2 (K2* key, V2* value, void* context)
 	pthread_mutex_unlock(jc->mutex1);
 }
 
-void emit3 (K3* key, V3* value, void* context){
+void emit3 (K3* key, V3* value, void* context)
+{
 	OutputPair p = OutputPair(key, value);
 	JobContext* jc = (JobContext*)context;
 	OutputVec vec = *(jc->output_vec);
@@ -114,9 +126,29 @@ void emit3 (K3* key, V3* value, void* context){
 	pthread_mutex_unlock(jc->mutex2);
 }
 
-void getJobState(JobHandle job, JobState* state);
+void getJobState(JobHandle job, JobState* state)
+{	
+	JobContext* jc = (JobContext*)job;
+	int* temp = (int*) jc->atomic_state;
+	int total = *temp;
+	temp++;
+	int done = *temp;
+	if (total >= 0) {
+		if (done >= 0) {
+			jc->state->stage = UNDEFINED_STAGE;
+		} else {
+			jc->state->stage = MAP_STAGE;
+		}
+	} else {
+			jc->state->stage = REDUCE_STAGE;
+		}
+	jc->state->percentage = abs(total) / abs(done);
+	state->stage = jc->state->stage;
+	state->percentage = jc->state->percentage;
+}
 
-void closeJobHandle(JobHandle job) {
+void closeJobHandle(JobHandle job)
+{
 	JobContext* jc = (JobContext*)job;
 	if (pthread_mutex_destroy(jc->mutex1) || pthread_mutex_destroy(jc->mutex2)) {
 		ERR("mutex destroy")
