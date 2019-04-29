@@ -1,7 +1,6 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <iostream>
-#include <cstdlib>
 #include <atomic>
 #include "MapReduceClient.h"
 #include "Barrier.h"
@@ -24,7 +23,6 @@ struct JobContext
 	Barrier* barrier;
 	const MapReduceClient* client;
 	const InputVec* input_vec;
-	IntermediateVec* inter_vec;
 	OutputVec* output_vec;
 	pthread_mutex_t *mutex1, *mutex2;
 	sem_t *sema;
@@ -33,6 +31,7 @@ struct JobContext
 struct ThreadContext
 {
 	int tid;
+	IntermediateVec* inter_vec;
 	JobContext* jc;
 };
 
@@ -71,25 +70,24 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 		ERR("mutex init")
 	}
 
-	IntermediateVec* inter_vec = new IntermediateVec();
-	if (inter_vec == nullptr) {
-		ERR("inter_vec init")
-	}
-
 	sem_t sema;
 	if (sem_init(&sema, 0, 0)) {
 		ERR("semaphore init")
 	}
 
     std::atomic<double> atomic_state(0);
-	int* temp = (int*) &atomic_state;
-	*temp = inputVec.size();
+	unsigned int* temp = (unsigned int*) &atomic_state;
+	*temp = inputVec.size() * 2;
 
 	JobContext* jc = new JobContext({multiThreadLevel, threads, &js, barrier, &client,
-					 &inputVec, inter_vec, &outputVec, &mutex1, &mutex2, &sema, &atomic_state});
+					 &inputVec, &outputVec, &mutex1, &mutex2, &sema, &atomic_state});
 
 	for (int i = 0; i < multiThreadLevel; ++i) {
-		t_con[i] = {i, jc};
+		IntermediateVec* inter_vec = new IntermediateVec();
+		if (inter_vec == nullptr) {
+			ERR("inter_vec init")
+		}
+		t_con[i] = {i, inter_vec, jc};
 		pthread_create(&threads[i], NULL, do_work, &t_con[i]);
 	}
 	return jc;
@@ -106,48 +104,45 @@ void waitForJob(JobHandle job)
 
 void emit2 (K2* key, V2* value, void* context)
 {
+	ThreadContext* tc = (ThreadContext*)context;
 	IntermediatePair p = IntermediatePair(key, value);
-	JobContext* jc = (JobContext*)context;
-	IntermediateVec vec = *(jc->inter_vec);
-	pthread_mutex_lock(jc->mutex1);
-	auto it = vec.begin();
-	vec.insert(it, p);
-	pthread_mutex_unlock(jc->mutex1);
+	IntermediateVec* vec = tc->inter_vec;
+	auto it = vec->begin();
+	vec->insert(it, p);
 }
 
 void emit3 (K3* key, V3* value, void* context)
-{
+{	
+	ThreadContext* tc = (ThreadContext*)context;
 	OutputPair p = OutputPair(key, value);
-	JobContext* jc = (JobContext*)context;
-	OutputVec vec = *(jc->output_vec);
+	JobContext* jc = tc->jc;
+	OutputVec* vec = jc->output_vec;
 	pthread_mutex_lock(jc->mutex2);
-	auto it = vec.begin();
-	vec.insert(it, p);
+	auto it = vec->begin();
+	vec->insert(it, p);
 	pthread_mutex_unlock(jc->mutex2);
 }
 
 void getJobState(JobHandle job, JobState* state)
 {	
 	JobContext* jc = (JobContext*)job;
-	int* temp = (int*) jc->atomic_state;
-	int total = *temp;
+	unsigned int* temp = (unsigned int*) jc->atomic_state;
+	unsigned int total = *temp;
 	temp++;
-	int done = *temp;
+	unsigned int done = *temp;
 
-	if (total >= 0) {
-		if (done >= 0) {
-			jc->state->stage = UNDEFINED_STAGE;
-		} else {
+	if (done == 0) {
+		jc->state->stage = UNDEFINED_STAGE;
+	} else if (done <= total / 2) { 
 			jc->state->stage = MAP_STAGE;
-		}
-	} else {
+	} else if (done > total / 2) { 
 			jc->state->stage = REDUCE_STAGE;
-		}
+	}
 
 	if (done == 0) {
 		jc->state->percentage = 0;
 	} else {
-		jc->state->percentage = abs(total) / abs(done);
+		jc->state->percentage = done / (total / 2);
 	}
 
 	state->stage = jc->state->stage;
@@ -163,13 +158,7 @@ void closeJobHandle(JobHandle job)
 	if (sem_destroy(jc->sema)) {
 		ERR("semaphore destroy")
 	}
-	jc->barrier->~Barrier();
 
-	for (auto it = jc->inter_vec->begin(); it != jc->inter_vec->end(); ++it) {
-		it->first->~K2();
-		it->second->~V2();
-	}
-	jc->inter_vec->clear();
-	jc->inter_vec->~vector();
+	delete jc->barrier;
 }
 	
