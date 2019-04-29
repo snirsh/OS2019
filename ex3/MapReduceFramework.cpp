@@ -64,7 +64,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 	JobState js = {stage_t(0),0};
 	pthread_t threads[multiThreadLevel];
 	ThreadContext t_con[multiThreadLevel];
-	Barrier* barrier = new Barrier(multiThreadLevel);
+	Barrier barrier(multiThreadLevel);
 
 	pthread_mutex_t mutex1, mutex2;
 	if (pthread_mutex_init(&mutex1, NULL) || pthread_mutex_init(&mutex2, NULL)) {
@@ -133,7 +133,7 @@ void getJobState(JobHandle job, JobState* state)
 	int total = *temp;
 	temp++;
 	int done = *temp;
-	
+
 	if (total >= 0) {
 		if (done >= 0) {
 			jc->state->stage = UNDEFINED_STAGE;
