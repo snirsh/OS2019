@@ -55,6 +55,7 @@ void* do_work(void* arg)
 
 	MSG("reached barrier - tid: " << tid)
 	jc->barrier->barrier();
+	MSG("crossed barrier - tid: " << tid)
 
 	if (tid == 0) {
 		// shuffle
