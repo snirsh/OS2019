@@ -43,7 +43,7 @@ void* do_work(void* arg)
 	int tid = tc->tid;
 	JobContext* jc = tc->jc;
 
-	MSG("working thread " << tid)
+	MSG("working - tid: " << tid)
 	int k = 0;
 	for (int i=0; i<100000; i++) {
 		for (int j=0; j<10000; j++) {
@@ -53,6 +53,7 @@ void* do_work(void* arg)
 	// map
 	// sort
 
+	MSG("reached barrier - tid: " << tid)
 	jc->barrier->barrier();
 
 	if (tid == 0) {
@@ -70,7 +71,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 {
 	JobState js = {stage_t(0),0};
 	pthread_t threads[multiThreadLevel];
-	ThreadContext t_con[multiThreadLevel];
+	ThreadContext* t_con[multiThreadLevel];
 	Barrier* barrier = new Barrier(multiThreadLevel);
 
 	pthread_mutex_t mutex1, mutex2;
@@ -95,8 +96,8 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 		if (inter_vec == nullptr) {
 			ERR("inter_vec init")
 		}
-		t_con[i] = {i, inter_vec, jc};
-		pthread_create(&threads[i], NULL, do_work, &t_con[i]);
+		t_con[i] = new ThreadContext({i, inter_vec, jc});
+		pthread_create(&threads[i], NULL, do_work, t_con[i]);
 	}
 	return jc;
 }
