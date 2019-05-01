@@ -101,6 +101,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
     std::atomic<double> atomic_state(0);
 	unsigned int* temp = (unsigned int*) &atomic_state;
 	*temp = inputVec.size() * 2;
+	
 	auto inter_vecs = new std::vector<IntermediateVec>();
 	CHECK_NULLPTR(inter_vecs, "inter_vecs init")
 
