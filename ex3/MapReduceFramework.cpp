@@ -7,6 +7,7 @@
 
 // DEFS
 #define ERR(msg) std::cerr << "error: " << msg << std::endl; exit(1);
+#define MSG(msg) std::cout << msg << std::endl;
 typedef void* JobHandle;
 enum stage_t {UNDEFINED_STAGE=0, MAP_STAGE=1, REDUCE_STAGE=2};
 
@@ -42,6 +43,13 @@ void* do_work(void* arg)
 	int tid = tc->tid;
 	JobContext* jc = tc->jc;
 
+	MSG("working thread " << tid)
+	int k = 0;
+	for (int i=0; i<100000; i++) {
+		for (int j=0; j<10000; j++) {
+			k = i*j;
+		}
+	}
 	// map
 	// sort
 
@@ -82,7 +90,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 	JobContext* jc = new JobContext({multiThreadLevel, threads, &js, barrier, &client,
 					 &inputVec, &outputVec, &mutex1, &mutex2, &sema, &atomic_state});
 
-	for (int i = 0; i < multiThreadLevel; ++i) {
+	for (int i = 0; i < multiThreadLevel; i++) {
 		IntermediateVec* inter_vec = new IntermediateVec();
 		if (inter_vec == nullptr) {
 			ERR("inter_vec init")
