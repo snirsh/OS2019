@@ -185,6 +185,13 @@ void closeJobHandle(JobHandle job)
 		ERR("semaphore destroy")
 	}
 
+	ThreadContext** t_cons = jc->t_cons;
+	for (int i = 0; i < jc->level; ++i) {
+		delete t_cons[i]->inter_vec;
+		delete t_cons[i];
+	}
+
 	delete jc->barrier;
+	delete jc;
 }
 	
