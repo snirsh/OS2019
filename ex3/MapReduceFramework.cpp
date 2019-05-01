@@ -8,9 +8,12 @@
 // DEFS
 #define ERR(msg) std::cerr << "error: " << msg << std::endl; exit(1);
 #define MSG(msg) std::cout << msg << std::endl;
+#define CHECK_NULLPTR(ptr, msg) if (ptr == nullptr) {ERR(msg)}
+
 typedef void* JobHandle;
 enum stage_t {UNDEFINED_STAGE=0, MAP_STAGE=1, REDUCE_STAGE=2};
 
+// STRUCTS
 struct JobState
 {
 	stage_t stage;
@@ -19,15 +22,18 @@ struct JobState
 struct JobContext
 {
 	int level;
-	pthread_t* threads;
+	pthread_t** threads;
+	ThreadContext** t_cons;
 	JobState* state;
 	Barrier* barrier;
 	const MapReduceClient* client;
 	const InputVec* input_vec;
 	OutputVec* output_vec;
+	std::vector<IntermediateVec>* inter_vecs;
 	pthread_mutex_t *mutex1, *mutex2;
 	sem_t *sema;
 	std::atomic<double>* atomic_state;
+	std::atomic<int>* atomic_counter;
 };
 struct ThreadContext
 {
@@ -40,27 +46,30 @@ struct ThreadContext
 void* do_work(void* arg)
 {
 	ThreadContext* tc = (ThreadContext*)arg;
-	int tid = tc->tid;
 	JobContext* jc = tc->jc;
+	int tid = tc->tid;
 
 	MSG("working - tid: " << tid)
-	int k = 0;
-	for (int i=0; i<100000; i++) {
-		for (int j=0; j<10000; j++) {
-			k = i*j;
-		}
-	}
+
 	// map
+	int input_size = jc->input_vec->size();
+	while (*(jc->atomic_counter) <= input_size)
+	{
+		int i = *(jc->atomic_counter)++;
+		InputPair ip = jc->input_vec->at(i);
+		jc->client->map(ip.first, ip.second, arg);
+	}
 	// sort
+	std::sort(tc->inter_vec->begin(), tc->inter_vec->end());
 
 	MSG("reached barrier - tid: " << tid)
 	jc->barrier->barrier();
 	MSG("crossed barrier - tid: " << tid)
 
-	if (tid == 0) {
+	if (tid == 0)
+	{
 		// shuffle
-	}
-	else {
+	} else {
 		// reduce
 	}
 	return 0;
@@ -71,34 +80,41 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 							int multiThreadLevel)
 {
 	JobState js = {stage_t(0),0};
-	pthread_t threads[multiThreadLevel];
-	ThreadContext* t_con[multiThreadLevel];
+	pthread_t* threads[multiThreadLevel];
+	ThreadContext* t_cons[multiThreadLevel];
 	Barrier* barrier = new Barrier(multiThreadLevel);
+	CHECK_NULLPTR(barrier, "Barrier init")
 
 	pthread_mutex_t mutex1, mutex2;
-	if (pthread_mutex_init(&mutex1, NULL) || pthread_mutex_init(&mutex2, NULL)) {
+	if (pthread_mutex_init(&mutex1, NULL) || pthread_mutex_init(&mutex2, NULL))
+	{
 		ERR("mutex init")
 	}
 
 	sem_t sema;
-	if (sem_init(&sema, 0, 0)) {
+	if (sem_init(&sema, 0, 0))
+	{
 		ERR("semaphore init")
 	}
 
+    std::atomic<int> atomic_counter(0);
     std::atomic<double> atomic_state(0);
 	unsigned int* temp = (unsigned int*) &atomic_state;
 	*temp = inputVec.size() * 2;
+	auto inter_vecs = new std::vector<IntermediateVec>();
+	CHECK_NULLPTR(inter_vecs, "inter_vecs init")
 
-	JobContext* jc = new JobContext({multiThreadLevel, threads, &js, barrier, &client,
-					 &inputVec, &outputVec, &mutex1, &mutex2, &sema, &atomic_state});
+	JobContext* jc = new JobContext({multiThreadLevel, threads, t_cons, &js,
+									 barrier, &client, &inputVec, &outputVec, inter_vecs, &mutex1,
+									 &mutex2, &sema, &atomic_state, &atomic_counter});
 
-	for (int i = 0; i < multiThreadLevel; i++) {
+	for (int i = 0; i < multiThreadLevel; i++)
+	{
 		IntermediateVec* inter_vec = new IntermediateVec();
-		if (inter_vec == nullptr) {
-			ERR("inter_vec init")
-		}
-		t_con[i] = new ThreadContext({i, inter_vec, jc});
-		pthread_create(&threads[i], NULL, do_work, t_con[i]);
+		CHECK_NULLPTR(inter_vec, "inter_vec init, tid=" << i)
+		t_cons[i] = new ThreadContext({i, inter_vec, jc});
+		CHECK_NULLPTR(t_cons[i], "ThreadContext init, tid=" << i)
+		pthread_create(threads[i], NULL, do_work, t_cons[i]);
 	}
 	return jc;
 }
@@ -106,9 +122,9 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 void waitForJob(JobHandle job)
 {
 	int level = ((JobContext*)job)->level;
-	pthread_t* threads = ((JobContext*)job)->threads;
+	pthread_t** threads = ((JobContext*)job)->threads;
 	for (int i = 0; i < level; ++i) {
-		pthread_join(threads[i], NULL);
+		pthread_join(*threads[i], NULL);
 	}
 }
 
@@ -151,7 +167,7 @@ void getJobState(JobHandle job, JobState* state)
 
 	if (done == 0) {
 		jc->state->percentage = 0;
-	} else {
+	} else{
 		jc->state->percentage = done / (total / 2);
 	}
 
