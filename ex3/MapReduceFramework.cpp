@@ -2,6 +2,7 @@
 #include <semaphore.h>
 #include <iostream>
 #include <atomic>
+#include <algorithm>
 #include "MapReduceClient.h"
 #include "Barrier.h"
 
@@ -19,10 +20,11 @@ struct JobState
 	stage_t stage;
 	float percentage;
 };
+struct ThreadContext;
 struct JobContext
 {
 	int level;
-	pthread_t** threads;
+	std::vector<pthread_t> threads;
 	ThreadContext** t_cons;
 	JobState* state;
 	Barrier* barrier;
@@ -100,7 +102,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 							int multiThreadLevel)
 {
 	JobState js = {stage_t(0),0};
-	pthread_t* threads[multiThreadLevel];
+	std::vector<pthread_t> threads(multiThreadLevel);
 	ThreadContext* t_cons[multiThreadLevel];
 	Barrier* barrier = new Barrier(multiThreadLevel);
 	CHECK_NULLPTR(barrier, "Barrier init")
@@ -133,7 +135,9 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 		CHECK_NULLPTR(inter_vec, "inter_vec init, tid=" << i)
 		t_cons[i] = new ThreadContext({i, inter_vec, jc});
 		CHECK_NULLPTR(t_cons[i], "ThreadContext init, tid=" << i)
-		pthread_create(threads[i], NULL, do_work, t_cons[i]);
+		pthread_t new_thread;
+		pthread_create(&new_thread, NULL, do_work, t_cons[i]);
+		threads.push_back(new_thread);
 	}
 	return jc;
 }
@@ -141,9 +145,9 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 void waitForJob(JobHandle job)
 {
 	int level = ((JobContext*)job)->level;
-	pthread_t** threads = ((JobContext*)job)->threads;
+	std::vector<pthread_t> threads = ((JobContext*)job)->threads;
 	for (int i = 0; i < level; ++i) {
-		pthread_join(*threads[i], NULL);
+		pthread_join(threads.at(i), NULL);
 	}
 }
 
