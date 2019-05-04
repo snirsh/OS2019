@@ -56,8 +56,9 @@ void* do_work(void* arg)
 	// map
 	unsigned int input_size = jc->input_vec->size();
 	unsigned int temp = jc->atomic_done->load();
-	while (temp < input_size)
+	while (true)
 	{
+		if (temp >= input_size) { break; }
 		temp = (*(jc->atomic_done))++;
 		InputPair ip = jc->input_vec->at(temp);
 		jc->client->map(ip.first, ip.second, arg);
