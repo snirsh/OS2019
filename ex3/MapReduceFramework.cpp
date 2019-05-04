@@ -58,12 +58,11 @@ void* do_work(void* arg)
 	unsigned int temp = jc->atomic_done->load();
 	while (true)
 	{
-		if (temp >= input_size) { break; }
 		temp = (*(jc->atomic_done))++;
+		if (temp >= input_size) { break; }
 		InputPair ip = jc->input_vec->at(temp);
 		jc->client->map(ip.first, ip.second, arg);
 		MSG("tid "<<tid<< " mapping i="<<temp)
-		temp = jc->atomic_done->load();
 	}
 	// sort
 	std::sort(tc->inter_vec->begin(), tc->inter_vec->end());
