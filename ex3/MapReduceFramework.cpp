@@ -55,12 +55,13 @@ void* do_work(void* arg)
 
 	// map
 	int input_size = jc->input_vec->size();
-	while (jc->atomic_done->load() < input_size)
+	int temp = 0;
+	while (temp < input_size)
 	{
 		(*(jc->atomic_done))++;
-		int i = jc->atomic_done->load() - 1;
-		InputPair ip = jc->input_vec->at(i);
-		MSG("tid "<<tid<< " mapping i="<<i)
+		temp = jc->atomic_done->load() - 1;
+		InputPair ip = jc->input_vec->at(temp);
+		MSG("tid "<<tid<< " mapping i="<<temp)
 		jc->client->map(ip.first, ip.second, arg);
 	}
 	// sort
