@@ -34,7 +34,8 @@ struct JobContext
 	std::vector<IntermediateVec>* inter_vecs;
 	pthread_mutex_t *mutex1, *mutex2;
 	sem_t *sema;
-	std::atomic<int>* atomic_counter, *atomic_done;
+	std::atomic<int>* atomic_counter;
+	std::atomic<int>* atomic_done;
 };
 struct ThreadContext
 {
@@ -128,7 +129,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 
 	JobContext* jc = new JobContext({multiThreadLevel, threads, t_cons, &js,
 									 barrier, &client, &inputVec, &outputVec, inter_vecs, &mutex1,
-									 &mutex2, &sema, &atomic_counter});
+									 &mutex2, &sema, &atomic_counter, &atomic_done});
 
 	jc->state->stage = MAP_STAGE;
 	for (int i = 0; i < multiThreadLevel; i++)
