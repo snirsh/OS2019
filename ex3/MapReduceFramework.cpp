@@ -122,14 +122,14 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 		ERR("semaphore init")
 	}
 
-    std::atomic<unsigned int> atomic_done(0);
+    std::atomic<unsigned int>* atomic_done = new std::atomic<unsigned int>;
 	
 	auto inter_vecs = new std::vector<IntermediateVec>();
 	CHECK_NULLPTR(inter_vecs, "inter_vecs init")
 
 	JobContext* jc = new JobContext({multiThreadLevel, threads, t_cons, js,
 									 barrier, &client, &inputVec, &outputVec, inter_vecs, &mutex1,
-									 &mutex2, &sema, &atomic_done});
+									 &mutex2, &sema, atomic_done});
 
 	jc->state->stage = MAP_STAGE;
 	for (int i = 0; i < multiThreadLevel; i++)
