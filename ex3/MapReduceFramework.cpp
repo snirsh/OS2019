@@ -62,6 +62,7 @@ void* do_work(void* arg)
 		InputPair ip = jc->input_vec->at(temp);
 		MSG("tid "<<tid<< " mapping i="<<temp)
 		jc->client->map(ip.first, ip.second, arg);
+		temp = jc->atomic_done->load();
 	}
 	// sort
 	std::sort(tc->inter_vec->begin(), tc->inter_vec->end());
