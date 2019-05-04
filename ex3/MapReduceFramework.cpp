@@ -58,8 +58,8 @@ void* do_work(void* arg)
 	while (jc->atomic_done->load() < input_size)
 	{
 		int i = jc->atomic_done->load();
-		InputPair ip = jc->input_vec->at(i);
 		(*(jc->atomic_done))++;
+		InputPair ip = jc->input_vec->at(i);
 		MSG("tid "<<tid<< " mapping i="<<i)
 		jc->client->map(ip.first, ip.second, arg);
 	}
