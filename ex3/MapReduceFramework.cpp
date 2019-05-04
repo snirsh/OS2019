@@ -35,7 +35,7 @@ struct JobContext
 	pthread_mutex_t *mutex1, *mutex2;
 	sem_t *sema;
 	std::atomic<int>* atomic_counter;
-	std::atomic<int>* atomic_done;
+	std::atomic<unsigned int>* atomic_done;
 };
 struct ThreadContext
 {
@@ -54,8 +54,8 @@ void* do_work(void* arg)
 	MSG("working - tid: " << tid)
 
 	// map
-	int input_size = jc->input_vec->size();
-	int temp = jc->atomic_done->load();
+	unsigned int input_size = jc->input_vec->size();
+	unsigned int temp = jc->atomic_done->load();
 	while (temp < input_size)
 	{
 		temp = (*(jc->atomic_done))++;
