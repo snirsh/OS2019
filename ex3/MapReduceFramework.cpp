@@ -55,7 +55,7 @@ void* do_work(void* arg)
 
 	// map
 	int input_size = jc->input_vec->size();
-	while (*(jc->atomic_counter) <= input_size)
+	while (jc->atomic_counter->load() <= input_size)
 	{
 		int i = *(jc->atomic_counter)++;
 		InputPair ip = jc->input_vec->at(i);
@@ -88,7 +88,7 @@ void* do_work(void* arg)
 			temp->clear();
 		}
 	}
-	while(*jc->atomic_done < jc->inter_vecs->size())
+	while(jc->atomic_done->load() < jc->inter_vecs->size())
 	{
 		sem_wait(jc->sema);
 		pthread_mutex_lock(jc->mutex1);
