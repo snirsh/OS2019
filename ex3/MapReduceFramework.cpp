@@ -57,8 +57,8 @@ void* do_work(void* arg)
 	int input_size = jc->input_vec->size();
 	while (jc->atomic_done->load() < input_size)
 	{
-		int i = jc->atomic_done->load();
 		(*(jc->atomic_done))++;
+		int i = jc->atomic_done->load() - 1;
 		InputPair ip = jc->input_vec->at(i);
 		MSG("tid "<<tid<< " mapping i="<<i)
 		jc->client->map(ip.first, ip.second, arg);
