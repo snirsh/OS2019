@@ -124,7 +124,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 	}
 
     std::atomic<int> atomic_counter(0);
-    std::atomic<int> atomic_done(0);
+    std::atomic<unsigned int> atomic_done(0);
 	
 	auto inter_vecs = new std::vector<IntermediateVec>();
 	CHECK_NULLPTR(inter_vecs, "inter_vecs init")
