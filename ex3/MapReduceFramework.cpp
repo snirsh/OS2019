@@ -57,12 +57,11 @@ void* do_work(void* arg)
 	int input_size = jc->input_vec->size();
 	while (jc->atomic_counter->load() <= input_size)
 	{
-		*(jc->atomic_counter)++;
-		int i = jc->atomic_counter->load();
+		int i = (*(jc->atomic_counter))++;
 		InputPair ip = jc->input_vec->at(i);
 		MSG("tid "<<tid<< " mapping i="<<i)
 		jc->client->map(ip.first, ip.second, arg);
-		*(jc->atomic_done)++;
+		(*(jc->atomic_done))++;
 	}
 	// sort
 	std::sort(tc->inter_vec->begin(), tc->inter_vec->end());
@@ -74,7 +73,7 @@ void* do_work(void* arg)
 
 	if (tid == 0)
 	{	
-		*(jc->atomic_done) = 0;
+		(*(jc->atomic_done)) = 0;
 		for (int i=0; i < tc->inter_vec->size(); i++)
 		{
 			IntermediateVec* temp = new IntermediateVec();
@@ -97,7 +96,7 @@ void* do_work(void* arg)
 		jc->inter_vecs->erase(jc->inter_vecs->begin());
 		pthread_mutex_unlock(jc->mutex1);
 		jc->client->reduce(iv, &tc);
-		*(jc->atomic_done)++;
+		(*(jc->atomic_done))++;
 	}
 }
 
@@ -189,7 +188,7 @@ void getJobState(JobHandle job, JobState* state)
 	else if (js->stage == REDUCE_STAGE) {
 		total = jc->inter_vecs->size();
 	}
-	state->percentage = (*jc->atomic_done / (float)total) * 100;
+	state->percentage = (jc->atomic_done->load() / (float)total) * 100;
 	js->percentage = state->percentage;
 }
 
