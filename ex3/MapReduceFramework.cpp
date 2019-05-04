@@ -103,7 +103,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 							const InputVec& inputVec, OutputVec& outputVec,
 							int multiThreadLevel)
 {
-	JobState js = {stage_t(0),0};
+	JobState* js = new JobState({stage_t(0),0});
 	std::vector<pthread_t> threads(multiThreadLevel);
 	ThreadContext* t_cons[multiThreadLevel];
 	Barrier* barrier = new Barrier(multiThreadLevel);
@@ -127,7 +127,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 	auto inter_vecs = new std::vector<IntermediateVec>();
 	CHECK_NULLPTR(inter_vecs, "inter_vecs init")
 
-	JobContext* jc = new JobContext({multiThreadLevel, threads, t_cons, &js,
+	JobContext* jc = new JobContext({multiThreadLevel, threads, t_cons, js,
 									 barrier, &client, &inputVec, &outputVec, inter_vecs, &mutex1,
 									 &mutex2, &sema, &atomic_counter, &atomic_done});
 
@@ -211,6 +211,7 @@ void closeJobHandle(JobHandle job)
 	}
 
 	delete jc->barrier;
+	delete jc->state;
 	delete jc;
 }
 	
