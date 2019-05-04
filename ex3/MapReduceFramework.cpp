@@ -79,8 +79,8 @@ void* do_work(void* arg)
 			IntermediateVec* temp = new IntermediateVec();
 			CHECK_NULLPTR(temp, "temp vector")
 			for (int j=0; j < jc->level; j++) {
-				IntermediatePair ip = jc->t_cons[j]->inter_vec->at(tc->inter_vec->size() - j - 1);
-				temp->push_back(ip);
+				IntermediatePair* ip = &(jc->t_cons[j]->inter_vec->back());
+				temp->push_back(*ip);
 				jc->t_cons[j]->inter_vec->pop_back();
 			}
 			jc->inter_vecs->push_back(*temp);
