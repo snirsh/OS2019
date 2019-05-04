@@ -55,7 +55,7 @@ void* do_work(void* arg)
 
 	// map
 	int input_size = jc->input_vec->size();
-	while (jc->atomic_counter->load() <= input_size)
+	while (jc->atomic_done->load() < input_size)
 	{
 		int i = (*(jc->atomic_counter))++;
 		InputPair ip = jc->input_vec->at(i);
