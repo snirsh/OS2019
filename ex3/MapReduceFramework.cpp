@@ -106,7 +106,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 {
 	JobState* js = new JobState({stage_t(0),0});
 	std::vector<pthread_t> threads(multiThreadLevel);
-	ThreadContext* t_cons[multiThreadLevel];
+	ThreadContext** t_cons = new ThreadContext*[multiThreadLevel];
 	Barrier* barrier = new Barrier(multiThreadLevel);
 	CHECK_NULLPTR(barrier, "Barrier init")
 
