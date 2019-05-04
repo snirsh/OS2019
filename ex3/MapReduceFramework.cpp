@@ -187,7 +187,7 @@ void getJobState(JobHandle job, JobState* state)
 	else if (js->stage == REDUCE_STAGE) {
 		total = jc->inter_vecs->size();
 	}
-	state->percentage = (*jc->atomic_done / total) * 100;
+	state->percentage = (*jc->atomic_done / (float)total) * 100;
 	js->percentage = state->percentage;
 }
 
