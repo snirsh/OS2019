@@ -80,7 +80,8 @@ void* do_work(void* arg)
 			CHECK_NULLPTR(temp, "temp vector")
 			for (int j=0; j < jc->level; j++) {
 				IntermediatePair* ip = &(jc->t_cons[j]->inter_vec->back());
-				temp->push_back(*ip);
+				IntermediatePair* nip = new IntermediatePair(ip->first, ip->second);
+				temp->push_back(*nip);
 				jc->t_cons[j]->inter_vec->pop_back();
 			}
 			jc->inter_vecs->push_back(*temp);
