@@ -55,7 +55,7 @@ void* do_work(void* arg)
 
 	// map
 	int input_size = jc->input_vec->size();
-	int temp = 0;
+	int temp = jc->atomic_done->load();
 	while (temp < input_size)
 	{
 		temp = (*(jc->atomic_done))++;
