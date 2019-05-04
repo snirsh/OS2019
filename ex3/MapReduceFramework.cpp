@@ -71,7 +71,7 @@ void* do_work(void* arg)
 
 	if (tid == 0)
 	{	
-		jc->atomic_done = 0;
+		*(jc->atomic_done) = 0;
 		for (int i=0; i < tc->inter_vec->size(); i++)
 		{
 			IntermediateVec* temp = new IntermediateVec();
