@@ -32,8 +32,7 @@ struct JobContext
 	std::vector<IntermediateVec>* inter_vecs;
 	pthread_mutex_t *mutex1, *mutex2;
 	sem_t *sema;
-	std::atomic<double>* atomic_state;
-	std::atomic<int>* atomic_counter;
+	std::atomic<int>* atomic_counter, *atomic_done;
 };
 struct ThreadContext
 {
@@ -58,6 +57,7 @@ void* do_work(void* arg)
 		int i = *(jc->atomic_counter)++;
 		InputPair ip = jc->input_vec->at(i);
 		jc->client->map(ip.first, ip.second, arg);
+		*(jc->atomic_done)++;
 	}
 	// sort
 	std::sort(tc->inter_vec->begin(), tc->inter_vec->end());
@@ -67,12 +67,32 @@ void* do_work(void* arg)
 	MSG("crossed barrier - tid: " << tid)
 
 	if (tid == 0)
-	{
-		// shuffle
-	} else {
-		// reduce
+	{	
+		jc->atomic_done = 0;
+		for (int i=0; i < tc->inter_vec->size(); i++)
+		{
+			IntermediateVec* temp = new IntermediateVec();
+			CHECK_NULLPTR(temp, "temp vector")
+			for (int j=0; j < jc->level; j++) {
+				IntermediatePair ip = *(jc->t_cons[j]->inter_vec)->end();
+				temp->push_back(ip);
+				jc->t_cons[j]->inter_vec->pop_back();
+			}
+			jc->inter_vecs->push_back(*temp);
+			sem_post(jc->sema);
+			temp->clear();
+		}
 	}
-	return 0;
+	while(*jc->atomic_done < jc->inter_vecs->size())
+	{
+		sem_wait(jc->sema);
+		pthread_mutex_lock(jc->mutex1);
+		IntermediateVec* iv = &jc->inter_vecs->at(0);
+		jc->inter_vecs->erase(jc->inter_vecs->begin());
+		pthread_mutex_unlock(jc->mutex1);
+		jc->client->reduce(iv, &tc);
+		*(jc->atomic_done)++;
+	}
 }
 
 JobHandle startMapReduceJob(const MapReduceClient& client,
@@ -98,16 +118,14 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 	}
 
     std::atomic<int> atomic_counter(0);
-    std::atomic<double> atomic_state(0);
-	unsigned int* temp = (unsigned int*) &atomic_state;
-	*temp = inputVec.size() * 2;
+    std::atomic<int> atomic_done(0);
 	
 	auto inter_vecs = new std::vector<IntermediateVec>();
 	CHECK_NULLPTR(inter_vecs, "inter_vecs init")
 
 	JobContext* jc = new JobContext({multiThreadLevel, threads, t_cons, &js,
 									 barrier, &client, &inputVec, &outputVec, inter_vecs, &mutex1,
-									 &mutex2, &sema, &atomic_state, &atomic_counter});
+									 &mutex2, &sema, &atomic_counter});
 
 	for (int i = 0; i < multiThreadLevel; i++)
 	{
@@ -132,48 +150,38 @@ void waitForJob(JobHandle job)
 void emit2 (K2* key, V2* value, void* context)
 {
 	ThreadContext* tc = (ThreadContext*)context;
-	IntermediatePair p = IntermediatePair(key, value);
+	IntermediatePair* p = new IntermediatePair(key, value);
 	IntermediateVec* vec = tc->inter_vec;
 	auto it = vec->begin();
-	vec->insert(it, p);
+	vec->insert(it, *p);
 }
 
 void emit3 (K3* key, V3* value, void* context)
 {	
 	ThreadContext* tc = (ThreadContext*)context;
-	OutputPair p = OutputPair(key, value);
+	OutputPair* p = new OutputPair(key, value);
 	JobContext* jc = tc->jc;
 	OutputVec* vec = jc->output_vec;
-	pthread_mutex_lock(jc->mutex2);
+	pthread_mutex_lock(jc->mutex1);
 	auto it = vec->begin();
-	vec->insert(it, p);
-	pthread_mutex_unlock(jc->mutex2);
+	vec->insert(it, *p);
+	pthread_mutex_unlock(jc->mutex1);
 }
 
 void getJobState(JobHandle job, JobState* state)
 {	
 	JobContext* jc = (JobContext*)job;
-	unsigned int* temp = (unsigned int*) jc->atomic_state;
-	unsigned int total = *temp;
-	temp++;
-	unsigned int done = *temp;
-
-	if (done == 0) {
-		jc->state->stage = UNDEFINED_STAGE;
-	} else if (done <= total / 2) { 
-			jc->state->stage = MAP_STAGE;
-	} else if (done > total / 2) { 
-			jc->state->stage = REDUCE_STAGE;
+	JobState* js = jc->state;
+	state->stage = js->stage;
+	int total;
+	if (js->stage == MAP_STAGE) {
+		total = jc->input_vec->size();
 	}
-
-	if (done == 0) {
-		jc->state->percentage = 0;
-	} else{
-		jc->state->percentage = done / (total / 2);
+	else if (js->stage == REDUCE_STAGE) {
+		total = jc->inter_vecs->size();
 	}
-
-	state->stage = jc->state->stage;
-	state->percentage = jc->state->percentage;
+	state->percentage = (*jc->atomic_done / total) * 100;
+	js->percentage = state->percentage;
 }
 
 void closeJobHandle(JobHandle job)
@@ -188,6 +196,9 @@ void closeJobHandle(JobHandle job)
 
 	ThreadContext** t_cons = jc->t_cons;
 	for (int i = 0; i < jc->level; ++i) {
+		for (IntermediatePair it : *(t_cons[i]->inter_vec)) {
+			delete &it;
+		}
 		delete t_cons[i]->inter_vec;
 		delete t_cons[i];
 	}
