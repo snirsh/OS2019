@@ -60,8 +60,8 @@ void* do_work(void* arg)
 	{
 		temp = (*(jc->atomic_done))++;
 		InputPair ip = jc->input_vec->at(temp);
-		MSG("tid "<<tid<< " mapping i="<<temp)
 		jc->client->map(ip.first, ip.second, arg);
+		MSG("tid "<<tid<< " mapping i="<<temp)
 		temp = jc->atomic_done->load();
 	}
 	// sort
