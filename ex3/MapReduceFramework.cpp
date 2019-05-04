@@ -66,6 +66,7 @@ void* do_work(void* arg)
 
 	MSG("reached barrier - tid: " << tid)
 	jc->barrier->barrier();
+	jc->state->stage = REDUCE_STAGE;
 	MSG("crossed barrier - tid: " << tid)
 
 	if (tid == 0)
@@ -129,6 +130,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 									 barrier, &client, &inputVec, &outputVec, inter_vecs, &mutex1,
 									 &mutex2, &sema, &atomic_counter});
 
+	jc->state->stage = MAP_STAGE;
 	for (int i = 0; i < multiThreadLevel; i++)
 	{
 		IntermediateVec* inter_vec = new IntermediateVec();
