@@ -34,7 +34,6 @@ struct JobContext
 	std::vector<IntermediateVec>* inter_vecs;
 	pthread_mutex_t *mutex1, *mutex2;
 	sem_t *sema;
-	std::atomic<int>* atomic_counter;
 	std::atomic<unsigned int>* atomic_done;
 };
 struct ThreadContext
@@ -56,13 +55,13 @@ void* do_work(void* arg)
 	// map
 	unsigned int input_size = jc->input_vec->size();
 	unsigned int temp = jc->atomic_done->load();
-	while (true)
+	while (temp < input_size)
 	{
 		temp = (*(jc->atomic_done))++;
-		if (temp >= input_size) { break; }
 		InputPair ip = jc->input_vec->at(temp);
 		jc->client->map(ip.first, ip.second, arg);
 		MSG("tid "<<tid<< " mapping i="<<temp)
+		temp = jc->atomic_done->load();
 	}
 	// sort
 	std::sort(tc->inter_vec->begin(), tc->inter_vec->end());
@@ -123,7 +122,6 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 		ERR("semaphore init")
 	}
 
-    std::atomic<int> atomic_counter(0);
     std::atomic<unsigned int> atomic_done(0);
 	
 	auto inter_vecs = new std::vector<IntermediateVec>();
@@ -131,7 +129,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 
 	JobContext* jc = new JobContext({multiThreadLevel, threads, t_cons, js,
 									 barrier, &client, &inputVec, &outputVec, inter_vecs, &mutex1,
-									 &mutex2, &sema, &atomic_counter, &atomic_done});
+									 &mutex2, &sema, &atomic_done});
 
 	jc->state->stage = MAP_STAGE;
 	for (int i = 0; i < multiThreadLevel; i++)
