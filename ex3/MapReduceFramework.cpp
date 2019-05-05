@@ -46,14 +46,14 @@ struct ThreadContext
 // FUNCS
 void* do_work(void* arg)
 {
-	ThreadContext* tc = (ThreadContext*)arg;
+    auto * tc = (ThreadContext*)arg;
 	JobContext* jc = tc->jc;
 	int tid = tc->tid;
 
 	MSG("working - tid: " << tid)
 
 	// map
-	unsigned int input_size = jc->input_vec->size();
+	unsigned long input_size = jc->input_vec->size();
 	unsigned int temp = jc->atomic_done->load();
 	while (temp < input_size)
 	{
@@ -79,7 +79,7 @@ void* do_work(void* arg)
 		K2* max_key;
 		K2* temp_key;
 		IntermediatePair* ip;
-		IntermediateVec* temp;
+		IntermediateVec* temp_inter_vec;
 		int total_size;
 
 		#define KEY_FROM_BACK(i) jc->t_cons[i]->inter_vec->back().first
@@ -90,7 +90,7 @@ void* do_work(void* arg)
 			// find max key from back of all inter_vecs
 			max_key = KEY_FROM_BACK(0);
 			for (int i=1; i < jc->level; i++) {
-				if (INTER_VEC_SIZE(i) == 0) {
+				if (jc->t_cons[i]->inter_vec->empty()) {
 					continue;
 				}
 				if (KEY_FROM_BACK(i) > max_key) {
@@ -100,20 +100,20 @@ void* do_work(void* arg)
 
 			// take pairs with key value of max_key from all inter_vecs
 			// and put inside new vector
-			temp = new IntermediateVec();
-			CHECK_NULLPTR(temp, "temp vector")
+            temp_inter_vec = new IntermediateVec();
+			CHECK_NULLPTR(temp_inter_vec, "temp vector")
 			for (int i=0; i < jc->level; i++)
 			{
-				if (INTER_VEC_SIZE(i) == 0) {
+				if (jc->t_cons[i]->inter_vec->empty()) {
 					continue;
 				}
 				temp_key = KEY_FROM_BACK(i);
-				while (!((temp_key > max_key) || (temp_key < max_key)))
+				while (temp_key!=max_key)
 				{
 					ip = &(jc->t_cons[i]->inter_vec->back());
-					temp->push_back(*ip);
+                    temp_inter_vec->push_back(*ip);
 					jc->t_cons[i]->inter_vec->pop_back();
-					if (INTER_VEC_SIZE(i) == 0) {
+					if (jc->t_cons[i]->inter_vec->empty()) {
 						break;
 					}
 					temp_key = KEY_FROM_BACK(i);
@@ -121,31 +121,33 @@ void* do_work(void* arg)
 				}
 			}
 			// add new vector to the batch to be processed by other threads
-			jc->inter_vecs->push_back(*temp);
-			sem_post(jc->sema);
+			jc->inter_vecs->push_back(*temp_inter_vec);
 
-			// check if all inter_vecs are empty
-			total_size = 0;
-			for (int i=0; i < jc->level; i++) {
-				total_size += INTER_VEC_SIZE(i);
-			}
-			if (total_size == 0) {
-				break;
-			}
-		}
-	}
+            // check if all inter_vecs are empty
+            total_size = 0;
+            for (int i=0; i < jc->level; i++) {
+                total_size += INTER_VEC_SIZE(i);
+            }
+            if (total_size == 0) {
+                break;
+            }
+        }
+        sem_post(jc->sema);
+    }
 
 	// reduce
-	while(jc->atomic_done->load() < jc->inter_vecs->size())
+    sem_wait(jc->sema);
+    while(jc->atomic_done->load() < jc->inter_vecs->size())
 	{
-		sem_wait(jc->sema);
-		pthread_mutex_lock(jc->mutex1);
+        pthread_mutex_lock(jc->mutex1);
 		IntermediateVec* iv = &jc->inter_vecs->at(0);
 		jc->inter_vecs->erase(jc->inter_vecs->begin());
 		pthread_mutex_unlock(jc->mutex1);
 		jc->client->reduce(iv, &tc);
 		(*(jc->atomic_done))++;
-	}
+        sem_post(jc->sema);
+    }
+    return nullptr;
 }
 
 JobHandle startMapReduceJob(const MapReduceClient& client,
@@ -153,13 +155,13 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 							int multiThreadLevel)
 {
 	JobState* js = new JobState({stage_t(0),0});
-	std::vector<pthread_t> threads(multiThreadLevel);
-	ThreadContext** t_cons = new ThreadContext*[multiThreadLevel];
-	Barrier* barrier = new Barrier(multiThreadLevel);
+	std::vector<pthread_t> threads(static_cast<unsigned long>(multiThreadLevel));
+    auto ** t_cons = new ThreadContext*[multiThreadLevel];
+    auto * barrier = new Barrier(multiThreadLevel);
 	CHECK_NULLPTR(barrier, "Barrier init")
 
 	pthread_mutex_t mutex1, mutex2;
-	if (pthread_mutex_init(&mutex1, NULL) || pthread_mutex_init(&mutex2, NULL))
+	if (pthread_mutex_init(&mutex1, nullptr) || pthread_mutex_init(&mutex2, nullptr))
 	{
 		ERR("mutex init")
 	}
@@ -170,7 +172,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 		ERR("semaphore init")
 	}
 
-    std::atomic<unsigned int>* atomic_done = new std::atomic<unsigned int>;
+    auto * atomic_done = new std::atomic<unsigned int>;
 	
 	auto inter_vecs = new std::vector<IntermediateVec>();
 	CHECK_NULLPTR(inter_vecs, "inter_vecs init")
@@ -182,12 +184,12 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 	jc->state->stage = MAP_STAGE;
 	for (int i = 0; i < multiThreadLevel; i++)
 	{
-		IntermediateVec* inter_vec = new IntermediateVec();
+        auto * inter_vec = new IntermediateVec();
 		CHECK_NULLPTR(inter_vec, "inter_vec init, tid=" << i)
 		t_cons[i] = new ThreadContext({i, inter_vec, jc});
 		CHECK_NULLPTR(t_cons[i], "ThreadContext init, tid=" << i)
 		pthread_t new_thread;
-		pthread_create(&new_thread, NULL, do_work, t_cons[i]);
+		pthread_create(&new_thread, nullptr, do_work, t_cons[i]);
 		threads.push_back(new_thread);
 	}
 	return jc;
@@ -198,23 +200,23 @@ void waitForJob(JobHandle job)
 	int level = ((JobContext*)job)->level;
 	std::vector<pthread_t> threads = ((JobContext*)job)->threads;
 	for (int i = 0; i < level; ++i) {
-		pthread_join(threads.at(i), NULL);
+		pthread_join(threads.at(static_cast<unsigned long>(i)), nullptr);
 	}
 }
 
 void emit2 (K2* key, V2* value, void* context)
 {
-	ThreadContext* tc = (ThreadContext*)context;
-	IntermediatePair* p = new IntermediatePair(key, value);
+    auto * tc = (ThreadContext*)context;
+    auto * p = new IntermediatePair(key, value);
 	IntermediateVec* vec = tc->inter_vec;
 	auto it = vec->begin();
 	vec->insert(it, *p);
 }
 
 void emit3 (K3* key, V3* value, void* context)
-{	
-	ThreadContext* tc = (ThreadContext*)context;
-	OutputPair* p = new OutputPair(key, value);
+{
+    auto * tc = (ThreadContext*)context;
+    auto * p = new OutputPair(key, value);
 	JobContext* jc = tc->jc;
 	OutputVec* vec = jc->output_vec;
 	pthread_mutex_lock(jc->mutex1);
@@ -224,16 +226,16 @@ void emit3 (K3* key, V3* value, void* context)
 }
 
 void getJobState(JobHandle job, JobState* state)
-{	
-	JobContext* jc = (JobContext*)job;
+{
+    auto * jc = (JobContext*)job;
 	JobState* js = jc->state;
 	state->stage = js->stage;
-	int total;
+	int total = 0;
 	if (js->stage == MAP_STAGE) {
-		total = jc->input_vec->size();
+		total = static_cast<int>(jc->input_vec->size());
 	}
 	else if (js->stage == REDUCE_STAGE) {
-		total = jc->inter_vecs->size();
+		total = static_cast<int>(jc->inter_vecs->size());
 	}
 	state->percentage = (jc->atomic_done->load() / (float)total) * 100;
 	js->percentage = state->percentage;
@@ -241,7 +243,7 @@ void getJobState(JobHandle job, JobState* state)
 
 void closeJobHandle(JobHandle job)
 {
-	JobContext* jc = (JobContext*)job;
+    auto * jc = (JobContext*)job;
 	if (pthread_mutex_destroy(jc->mutex1) || pthread_mutex_destroy(jc->mutex2)) {
 		ERR("mutex destroy")
 	}
