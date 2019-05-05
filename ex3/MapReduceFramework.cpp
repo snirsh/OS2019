@@ -79,9 +79,8 @@ void* do_work(void* arg)
 		K2* max_key;
 		K2* temp_key;
 		IntermediatePair* ip;
-		IntermediateVec* temp = new IntermediateVec();
+		IntermediateVec* temp;
 		int total_size;
-		CHECK_NULLPTR(temp, "temp vector")
 
 		#define KEY_FROM_BACK(i) jc->t_cons[i]->inter_vec->back().first
 		#define INTER_VEC_SIZE(i) jc->t_cons[i]->inter_vec->size()
@@ -101,6 +100,8 @@ void* do_work(void* arg)
 
 			// take pairs with key value of max_key from all inter_vecs
 			// and put inside new vector
+			temp = new IntermediateVec();
+			CHECK_NULLPTR(temp, "temp vector")
 			for (int i=0; i < jc->level; i++)
 			{
 				if (INTER_VEC_SIZE(i) == 0) {
@@ -122,7 +123,6 @@ void* do_work(void* arg)
 			// add new vector to the batch to be processed by other threads
 			jc->inter_vecs->push_back(*temp);
 			sem_post(jc->sema);
-			temp = new IntermediateVec();
 
 			// check if all inter_vecs are empty
 			total_size = 0;
