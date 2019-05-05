@@ -10,8 +10,6 @@
 #define ERR(msg) std::cerr << "error: " << msg << std::endl; exit(1);
 #define MSG(msg) std::cout << msg << std::endl;
 #define CHECK_NULLPTR(ptr, msg) if (ptr == nullptr) {ERR(msg)}
-#define KEY_FROM_BACK(i) jc->t_cons[i]->inter_vec->back().first
-#define INTER_VEC_SIZE(i) jc->t_cons[i]->inter_vec->size()
 
 typedef void* JobHandle;
 enum stage_t {UNDEFINED_STAGE=0, MAP_STAGE=1, REDUCE_STAGE=2};
@@ -84,6 +82,9 @@ void* do_work(void* arg)
 		IntermediateVec* temp = new IntermediateVec();
 		int total_size;
 		CHECK_NULLPTR(temp, "temp vector")
+
+		#define KEY_FROM_BACK(i) jc->t_cons[i]->inter_vec->back().first
+		#define INTER_VEC_SIZE(i) jc->t_cons[i]->inter_vec->size()
 
 		while (true)
 		{
