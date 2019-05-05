@@ -85,7 +85,7 @@ void* do_work(void* arg)
 
 		while (true)
 		{
-			K2* max_key = jc->t_cons[0]->inter_vec->back().first;
+			max_key = jc->t_cons[0]->inter_vec->back().first;
 			for (int i=1; i < jc->level; i++) {
 				if (jc->t_cons[i]->inter_vec->size() == 0) {
 					continue;
@@ -115,6 +115,8 @@ void* do_work(void* arg)
 			jc->inter_vecs->push_back(*temp);
 			sem_post(jc->sema);
 			temp->clear();
+			
+			total_size = 0;
 			for (int i=0; i < jc->level; i++) {
 				total_size += jc->t_cons[i]->inter_vec->size();
 			}
