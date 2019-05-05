@@ -10,6 +10,8 @@
 #define ERR(msg) std::cerr << "error: " << msg << std::endl; exit(1);
 #define MSG(msg) std::cout << msg << std::endl;
 #define CHECK_NULLPTR(ptr, msg) if (ptr == nullptr) {ERR(msg)}
+#define KEY_FROM_BACK(i) jc->t_cons[i]->inter_vec->back().first
+#define INTER_VEC_SIZE(i) jc->t_cons[i]->inter_vec->size()
 
 typedef void* JobHandle;
 enum stage_t {UNDEFINED_STAGE=0, MAP_STAGE=1, REDUCE_STAGE=2};
@@ -85,40 +87,46 @@ void* do_work(void* arg)
 
 		while (true)
 		{
-			max_key = jc->t_cons[0]->inter_vec->back().first;
+			// find max key from back of all inter_vecs
+			max_key = KEY_FROM_BACK(0);
 			for (int i=1; i < jc->level; i++) {
-				if (jc->t_cons[i]->inter_vec->size() == 0) {
+				if (INTER_VEC_SIZE(i) == 0) {
 					continue;
 				}
-				if (jc->t_cons[i]->inter_vec->back().first > max_key) {
-					max_key = jc->t_cons[i]->inter_vec->back().first;
+				if (KEY_FROM_BACK(i) > max_key) {
+					max_key = KEY_FROM_BACK(i);
 				}
 			}
+
+			// take pairs with key value of max_key from all inter_vecs
+			// and put inside new vector
 			for (int i=0; i < jc->level; i++)
 			{
-				if (jc->t_cons[i]->inter_vec->size() == 0) {
+				if (INTER_VEC_SIZE(i) == 0) {
 					continue;
 				}
-				temp_key = jc->t_cons[i]->inter_vec->back().first;
+				temp_key = KEY_FROM_BACK(i);
 				while (!((temp_key > max_key) || (temp_key < max_key)))
 				{
 					ip = &(jc->t_cons[i]->inter_vec->back());
 					temp->push_back(*ip);
 					jc->t_cons[i]->inter_vec->pop_back();
-					if (jc->t_cons[i]->inter_vec->size() == 0) {
+					if (INTER_VEC_SIZE(i) == 0) {
 						break;
 					}
-					temp_key = jc->t_cons[i]->inter_vec->back().first;
-					// MSG("[size] " << jc->t_cons[i]->inter_vec->size() << " [tid] "<< i)
+					temp_key = KEY_FROM_BACK(i);
+					MSG("[size] " << INTER_VEC_SIZE(i) << " [tid] "<< i)
 				}
 			}
+			// add new vector to the batch to be processed by other threads
 			jc->inter_vecs->push_back(*temp);
 			sem_post(jc->sema);
 			temp->clear();
-			
+
+			// check if all inter_vecs are empty
 			total_size = 0;
 			for (int i=0; i < jc->level; i++) {
-				total_size += jc->t_cons[i]->inter_vec->size();
+				total_size += INTER_VEC_SIZE(i);
 			}
 			if (total_size == 0) {
 				break;
