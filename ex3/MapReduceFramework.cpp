@@ -122,6 +122,7 @@ void* do_work(void* arg)
 			}
 			// add new vector to the batch to be processed by other threads
 			jc->inter_vecs->push_back(*temp_inter_vec);
+            sem_post(jc->sema);
 
             // check if all inter_vecs are empty
             total_size = 0;
@@ -132,20 +133,18 @@ void* do_work(void* arg)
                 break;
             }
         }
-        sem_post(jc->sema);
     }
 
 	// reduce
-    sem_wait(jc->sema);
     while(jc->atomic_done->load() < jc->inter_vecs->size())
 	{
+        sem_wait(jc->sema);
         pthread_mutex_lock(jc->mutex1);
 		IntermediateVec* iv = &jc->inter_vecs->at(0);
 		jc->inter_vecs->erase(jc->inter_vecs->begin());
 		pthread_mutex_unlock(jc->mutex1);
 		jc->client->reduce(iv, &tc);
 		(*(jc->atomic_done))++;
-        sem_post(jc->sema);
     }
     return nullptr;
 }
