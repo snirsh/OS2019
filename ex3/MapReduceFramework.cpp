@@ -134,12 +134,13 @@ void* do_work(void* arg)
             }
         }
     }
-
+	// TODO: one time use semaphore size of n (tid 0 should raise this sema to n after shuffle is done)
 	// reduce
-    while(jc->atomic_done->load() < jc->inter_vecs->size())
+	while(jc->atomic_done->load() < jc->inter_vecs->size())
 	{
-        sem_wait(jc->sema);
-        pthread_mutex_lock(jc->mutex1);
+		// TODO: instead of mutex make a sema of 1 (?)
+		sem_wait(jc->sema);
+		pthread_mutex_lock(jc->mutex1);
 		IntermediateVec* iv = &jc->inter_vecs->at(0);
 		jc->inter_vecs->erase(jc->inter_vecs->begin());
 		pthread_mutex_unlock(jc->mutex1);
