@@ -122,7 +122,7 @@ void* do_work(void* arg)
 			// add new vector to the batch to be processed by other threads
 			jc->inter_vecs->push_back(*temp);
 			sem_post(jc->sema);
-			temp->clear();
+			temp = new IntermediateVec();
 
 			// check if all inter_vecs are empty
 			total_size = 0;
