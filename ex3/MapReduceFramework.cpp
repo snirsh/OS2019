@@ -108,7 +108,7 @@ void* do_work(void* arg)
 					continue;
 				}
 				temp_key = KEY_FROM_BACK(i);
-				while (temp_key!=max_key)
+				while (!(temp_key < max_key || temp_key > max_key))
 				{
 					ip = &(jc->t_cons[i]->inter_vec->back());
                     temp_inter_vec->push_back(*ip);
