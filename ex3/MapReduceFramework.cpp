@@ -71,24 +71,60 @@ void* do_work(void* arg)
 	jc->state->stage = REDUCE_STAGE;
 	MSG("crossed barrier - tid: " << tid)
 
+	//shuffle
 	if (tid == 0)
 	{	
 		(*(jc->atomic_done)) = 0;
-		for (int i=0; i < tc->inter_vec->size(); i++)
+
+		K2* max_key;
+		K2* temp_key;
+		IntermediatePair* ip;
+		IntermediateVec* temp = new IntermediateVec();
+		int total_size;
+		CHECK_NULLPTR(temp, "temp vector")
+
+		while (true)
 		{
-			IntermediateVec* temp = new IntermediateVec();
-			CHECK_NULLPTR(temp, "temp vector")
-			for (int j=0; j < jc->level; j++) {
-				IntermediatePair* ip = &(jc->t_cons[j]->inter_vec->back());
-				IntermediatePair* nip = new IntermediatePair(ip->first, ip->second);
-				temp->push_back(*nip);
-				jc->t_cons[j]->inter_vec->pop_back();
+			K2* max_key = jc->t_cons[0]->inter_vec->back().first;
+			for (int i=1; i < jc->level; i++) {
+				if (jc->t_cons[i]->inter_vec->size() == 0) {
+					continue;
+				}
+				if (jc->t_cons[i]->inter_vec->back().first > max_key) {
+					max_key = jc->t_cons[i]->inter_vec->back().first;
+				}
+			}
+			for (int i=0; i < jc->level; i++)
+			{
+				if (jc->t_cons[i]->inter_vec->size() == 0) {
+					continue;
+				}
+				temp_key = jc->t_cons[i]->inter_vec->back().first;
+				while (!((temp_key > max_key) || (temp_key < max_key)))
+				{
+					ip = &(jc->t_cons[i]->inter_vec->back());
+					temp->push_back(*ip);
+					jc->t_cons[i]->inter_vec->pop_back();
+					if (jc->t_cons[i]->inter_vec->size() == 0) {
+						break;
+					}
+					temp_key = jc->t_cons[i]->inter_vec->back().first;
+					// MSG("[size] " << jc->t_cons[i]->inter_vec->size() << " [tid] "<< i)
+				}
 			}
 			jc->inter_vecs->push_back(*temp);
 			sem_post(jc->sema);
 			temp->clear();
+			for (int i=0; i < jc->level; i++) {
+				total_size += jc->t_cons[i]->inter_vec->size();
+			}
+			if (total_size == 0) {
+				break;
+			}
 		}
 	}
+
+	// reduce
 	while(jc->atomic_done->load() < jc->inter_vecs->size())
 	{
 		sem_wait(jc->sema);
