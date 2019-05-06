@@ -20,14 +20,14 @@ public:
 	virtual bool operator<(const K3 &other) const {
 		return c < static_cast<const KChar&>(other).c;
 	}
-	virtual char get() { return c;}
+	char get() { return c;}
 	char c;
 };
 
 class VCount : public V2, public V3{
 public:
 	VCount(int count) : count(count) { }
-	virtual int get() { return count;}
+	int get() { return count;}
 	int count;
 };
 
