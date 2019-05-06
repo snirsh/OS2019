@@ -140,7 +140,6 @@ void* do_work(void* arg)
             }
         }
     }
-	// TODO: one time use semaphore size of n (tid 0 should raise this sema to n after shuffle is done)
 	// reduce
 	/**
 	 * added a semaphore that is jc->level (#threads) size
@@ -150,7 +149,6 @@ void* do_work(void* arg)
 	sem_wait(jc->sema_lock_shuffle);
 	while(jc->atomic_done->load() < jc->inter_vecs->size())
 	{
-		// TODO: instead of mutex make a sema of 1 (?)
 		sem_wait(jc->sema);
 //		pthread_mutex_lock(jc->mutex1);
         /**
