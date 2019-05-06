@@ -26,7 +26,7 @@ struct ThreadContext;
 struct JobContext
 {
 	int level;
-	std::vector<pthread_t> threads;
+	pthread_t** threads;
 	ThreadContext** t_cons;
 	JobState* state;
 	Barrier* barrier;
@@ -37,7 +37,7 @@ struct JobContext
 	pthread_mutex_t *mutex1, *mutex2;
 	sem_t *sema;
 	std::atomic<unsigned int>* atomic_done;
-	bool waiting;
+	bool joined, shuffled;
 };
 struct ThreadContext
 {
@@ -82,7 +82,7 @@ void* do_work(void* arg)
 		K2* max_key;
 		K2* temp_key;
 		IntermediatePair* ip;
-		IntermediateVec* temp;
+		IntermediateVec* temp_iv;
 		int total_size;
 
 		#define KEY_FROM_BACK(i) jc->t_cons[i]->inter_vec->back().first
@@ -103,8 +103,8 @@ void* do_work(void* arg)
 
 			// take pairs with key value of max_key from all inter_vecs
 			// and put inside new vector
-			temp = new IntermediateVec();
-			CHECK_NULLPTR(temp, "temp vector")
+			temp_iv = new IntermediateVec();
+			CHECK_NULLPTR(temp_iv, "temp vector")
 			for (int i=0; i < jc->level; i++)
 			{
 				if (INTER_VEC_SIZE(i) == 0) {
@@ -114,7 +114,7 @@ void* do_work(void* arg)
 				while (!((*temp_key < *max_key) || (*max_key < *temp_key)))
 				{
 					ip = &(jc->t_cons[i]->inter_vec->back());
-					temp->push_back(*ip);
+					temp_iv->push_back(*ip);
 					jc->t_cons[i]->inter_vec->pop_back();
 					if (INTER_VEC_SIZE(i) == 0) {
 						break;
@@ -124,7 +124,7 @@ void* do_work(void* arg)
 				}
 			}
 			// add new vector to the batch to be processed by other threads
-			jc->inter_vecs->push_back(*temp);
+			jc->inter_vecs->push_back(*temp_iv);
 			sem_post(jc->sema);
 
 			// check if all inter_vecs are empty
@@ -136,12 +136,15 @@ void* do_work(void* arg)
 				break;
 			}
 		}
+		jc->shuffled = true;
 	}
 
 	// reduce
-	usleep(10000);
-	while(jc->atomic_done->load() < jc->inter_vecs->size())
+	while (true)
 	{
+		if (jc->shuffled && jc->inter_vecs->size == 0) {
+			break;
+		}
 		sem_wait(jc->sema);
 		pthread_mutex_lock(jc->mutex1);
 		IntermediateVec* iv = &jc->inter_vecs->at(0);
@@ -159,32 +162,39 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 							int multiThreadLevel)
 {
 	JobState* js = new JobState({stage_t(0),0});
-	std::vector<pthread_t> threads(multiThreadLevel);
+	pthread_t** threads = new pthread_t*[multiThreadLevel];
 	ThreadContext** t_cons = new ThreadContext*[multiThreadLevel];
 	Barrier* barrier = new Barrier(multiThreadLevel);
+	CHECK_NULLPTR(js, "JobState init")
+	CHECK_NULLPTR(threads, "threads init")
+	CHECK_NULLPTR(t_cons, "t_cons init")
 	CHECK_NULLPTR(barrier, "Barrier init")
 
 	pthread_mutex_t* mutex1 = new pthread_mutex_t();
 	pthread_mutex_t* mutex2 = new pthread_mutex_t();
+	CHECK_NULLPTR(mutex1, "mutex1 init")
+	CHECK_NULLPTR(mutex2, "mutex2 init")
 	if (pthread_mutex_init(mutex1, NULL) || pthread_mutex_init(mutex2, NULL))
 	{
 		ERR("mutex init")
 	}
 
 	sem_t* sema = new sem_t();
+	CHECK_NULLPTR(sema, "sema init")
 	if (sem_init(sema, 0, 0))
 	{
-		ERR("semaphore init")
+		ERR("sem_init")
 	}
 
     std::atomic<unsigned int>* atomic_done = new std::atomic<unsigned int>;
+	CHECK_NULLPTR(atomic_done, "atomic_done init")
 	
 	auto inter_vecs = new std::vector<IntermediateVec>();
 	CHECK_NULLPTR(inter_vecs, "inter_vecs init")
 
 	JobContext* jc = new JobContext({multiThreadLevel, threads, t_cons, js,
 									 barrier, &client, &inputVec, &outputVec, inter_vecs, mutex1,
-									 mutex2, sema, atomic_done, false});
+									 mutex2, sema, atomic_done, false, false});
 
 	jc->state->stage = MAP_STAGE;
 	for (int i = 0; i < multiThreadLevel; i++)
@@ -195,22 +205,21 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 		CHECK_NULLPTR(t_cons[i], "ThreadContext init, tid=" << i)
 		pthread_t* new_thread = new pthread_t();
 		pthread_create(new_thread, NULL, do_work, t_cons[i]);
-		threads.push_back(*new_thread);
+		threads[i] = new_thread;
 	}
 	return jc;
 }
 
 void waitForJob(JobHandle job)
 {
-	if (((JobContext*)job)->waiting) {
+	if (((JobContext*)job)->joined) {
 		return;
 	}
 	int level = ((JobContext*)job)->level;
-	std::vector<pthread_t> threads = ((JobContext*)job)->threads;
 	for (int i = 0; i < level; ++i) {
-		pthread_join(threads.at(i), NULL);
+		pthread_join(*((JobContext*)job)->threads[i], NULL);
 	}
-	((JobContext*)job)->waiting = true;
+	((JobContext*)job)->joined = true;
 }
 
 void emit2 (K2* key, V2* value, void* context)
@@ -265,12 +274,17 @@ void closeJobHandle(JobHandle job)
 		for (IntermediatePair it : *(t_cons[i]->inter_vec)) {
 			delete &it;
 		}
+		delete jc->threads[i];
 		delete t_cons[i]->inter_vec;
 		delete t_cons[i];
 	}
 
 	delete jc->barrier;
+	delete jc->threads;
 	delete jc->state;
+	delete jc->mutex1;
+	delete jc->mutex2;
+	delete jc->sema;
 	delete jc;
 }
 	
