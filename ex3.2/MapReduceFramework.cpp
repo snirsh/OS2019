@@ -33,7 +33,7 @@ struct JobContext
 	const MapReduceClient* client;
 	const InputVec* input_vec;
 	OutputVec* output_vec;
-	std::vector<IntermediateVec>* inter_vecs;
+	std::vector<IntermediateVec*>* inter_vecs;
 	pthread_mutex_t *mutex1, *mutex2;
 	sem_t *sema;
 	std::atomic<unsigned int>* atomic_done;
@@ -120,11 +120,11 @@ void* do_work(void* arg)
 						break;
 					}
 					temp_key = KEY_FROM_BACK(i);
-					MSG("[size] " << INTER_VEC_SIZE(i) << " [tid] "<< i)
 				}
 			}
 			// add new vector to the batch to be processed by other threads
-			jc->inter_vecs->push_back(*temp_iv);
+			MSG("pushing new vector to inter_vecs, size:  " << temp_iv->size())
+			jc->inter_vecs->push_back(temp_iv);
 			sem_post(jc->sema);
 
 			// check if all inter_vecs are empty
@@ -147,8 +147,8 @@ void* do_work(void* arg)
 		}
 		sem_wait(jc->sema);
 		pthread_mutex_lock(jc->mutex1);
-		IntermediateVec* iv = &jc->inter_vecs->at(0);
-		jc->inter_vecs->erase(jc->inter_vecs->begin());
+		IntermediateVec* iv = jc->inter_vecs->back();
+		jc->inter_vecs->pop_back();
 		pthread_mutex_unlock(jc->mutex1);
 		jc->client->reduce(iv, tc);
 		(*(jc->atomic_done))++;
@@ -189,7 +189,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
     std::atomic<unsigned int>* atomic_done = new std::atomic<unsigned int>;
 	CHECK_NULLPTR(atomic_done, "atomic_done init")
 	
-	auto inter_vecs = new std::vector<IntermediateVec>();
+	auto inter_vecs = new std::vector<IntermediateVec*>();
 	CHECK_NULLPTR(inter_vecs, "inter_vecs init")
 
 	JobContext* jc = new JobContext({multiThreadLevel, threads, t_cons, js,
