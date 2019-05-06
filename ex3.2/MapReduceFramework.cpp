@@ -30,7 +30,7 @@ struct JobContext
 	ThreadContext** t_cons;
 	JobState* state;
 	Barrier* barrier;
-	const MapReduceClient* client;
+	MapReduceClient* client;
 	const InputVec* input_vec;
 	OutputVec* output_vec;
 	std::vector<IntermediateVec*>* inter_vecs;

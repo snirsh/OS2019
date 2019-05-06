@@ -64,7 +64,7 @@ public:
 		usleep(150000);
 		emit3(k3, v3, context);
 	}
-	static void print_pair(IntermediatePair* ip) {
+	void print_pair(IntermediatePair* ip) {
 		std::cout<<"["<<((KChar*)ip->first)->c <<"]["<< ((VCount*)ip->second)->count<<"]"<<std::endl;
 	}
 
