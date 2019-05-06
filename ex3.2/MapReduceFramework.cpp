@@ -142,7 +142,7 @@ void* do_work(void* arg)
 	// reduce
 	while (true)
 	{
-		if (jc->shuffled && jc->inter_vecs->size() == 0) {
+		if (jc->shuffled && jc->inter_vecs->empty()) {
 			break;
 		}
 		sem_wait(jc->sema);
