@@ -38,6 +38,7 @@ struct JobContext
 	sem_t *sema;
 	std::atomic<unsigned int>* atomic_done;
 	bool joined, shuffled;
+	int total;
 };
 struct ThreadContext
 {
@@ -125,6 +126,7 @@ void* do_work(void* arg)
 			}
 			// add new vector to the batch to be processed by other threads
 			MSG("pushing new vector to inter_vecs, size:  " << temp_iv->size())
+			jc->total++;
 			jc->inter_vecs->push_back(temp_iv);
 			sem_post(jc->sema);
 
@@ -195,7 +197,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 
 	JobContext* jc = new JobContext({multiThreadLevel, threads, t_cons, js,
 									 barrier, &client, &inputVec, &outputVec, inter_vecs, mutex1,
-									 mutex2, sema, atomic_done, false, false});
+									 mutex2, sema, atomic_done, false, false, 0});
 
 	jc->state->stage = MAP_STAGE;
 	for (int i = 0; i < multiThreadLevel; i++)
@@ -254,7 +256,7 @@ void getJobState(JobHandle job, JobState* state)
 		total = jc->input_vec->size();
 	}
 	else if (js->stage == REDUCE_STAGE) {
-		total = jc->inter_vecs->size();
+		total = jc->total;
 	}
 	state->percentage = (jc->atomic_done->load() / (float)total) * 100;
 	js->percentage = state->percentage;
