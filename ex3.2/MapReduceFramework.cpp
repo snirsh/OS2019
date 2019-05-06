@@ -70,7 +70,7 @@ void* do_work(void* arg)
 	std::sort(tc->inter_vec->begin(), tc->inter_vec->end());
 	MSG("sorted innter_vec:")
 	for (int i=0; i < tc->inter_vec->size(); i++) {
-		MSG((char)tc->inter_vec->at(i).first<<"_"<<(int)tc->inter_vec->at(i).second);
+		MSG((char)*tc->inter_vec->at(i).first<<"_"<<(int)*tc->inter_vec->at(i).second);
 	}
 
 	MSG("reached barrier - tid: " << tid)
