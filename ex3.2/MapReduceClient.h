@@ -64,7 +64,6 @@ public:
 	// to output (K3, V3) pairs.
 	virtual void reduce(const IntermediateVec* pairs, void* context)
 		const = 0;
-	void print_pair(IntermediatePair* ip);
 };
 
 
