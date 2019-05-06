@@ -87,13 +87,14 @@ void* do_work(void* arg)
 
 		#define KEY_FROM_BACK(i) jc->t_cons[i]->inter_vec->back().first
 		#define INTER_VEC_SIZE(i) jc->t_cons[i]->inter_vec->size()
+		#define INTER_VEC_EMPTY(i) jc->t_cons[i]->inter_vec->empty()
 
 		while (true)
 		{
 			// find max key from back of all inter_vecs
 			max_key = KEY_FROM_BACK(0);
 			for (int i=1; i < jc->level; i++) {
-				if (INTER_VEC_SIZE(i) == 0) {
+				if (INTER_VEC_EMPTY(i)) {
 					continue;
 				}
 				if (KEY_FROM_BACK(i) > max_key) {
@@ -107,7 +108,7 @@ void* do_work(void* arg)
 			CHECK_NULLPTR(temp_iv, "temp vector")
 			for (int i=0; i < jc->level; i++)
 			{
-				if (INTER_VEC_SIZE(i) == 0) {
+				if (INTER_VEC_EMPTY(i)) {
 					continue;
 				}
 				temp_key = KEY_FROM_BACK(i);
@@ -116,7 +117,7 @@ void* do_work(void* arg)
 					ip = &(jc->t_cons[i]->inter_vec->back());
 					temp_iv->push_back(*ip);
 					jc->t_cons[i]->inter_vec->pop_back();
-					if (INTER_VEC_SIZE(i) == 0) {
+					if (INTER_VEC_EMPTY(i)) {
 						break;
 					}
 					temp_key = KEY_FROM_BACK(i);
