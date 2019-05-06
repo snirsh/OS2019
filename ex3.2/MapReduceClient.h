@@ -23,11 +23,13 @@ class K2 {
 public:
 	virtual ~K2(){}
 	virtual bool operator<(const K2 &other) const = 0;
+	virtual char get();
 };
 
 class V2 {
 public:
 	virtual ~V2(){}
+	virtual int get();
 };
 
 // output key and value
