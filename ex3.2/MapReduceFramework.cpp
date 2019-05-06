@@ -147,7 +147,7 @@ void* do_work(void* arg)
 		IntermediateVec* iv = &jc->inter_vecs->at(0);
 		jc->inter_vecs->erase(jc->inter_vecs->begin());
 		pthread_mutex_unlock(jc->mutex1);
-		jc->client->reduce(iv, &tc);
+		jc->client->reduce(iv, tc);
 		(*(jc->atomic_done))++;
 		MSG("reduced! done: "<<jc->atomic_done->load())
 	}
