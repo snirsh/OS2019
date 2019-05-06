@@ -97,7 +97,7 @@ void* do_work(void* arg)
 				if (INTER_VEC_EMPTY(i)) {
 					continue;
 				}
-				if (KEY_FROM_BACK(i) > max_key) {
+				if (*max_key < *KEY_FROM_BACK(i)) {
 					max_key = KEY_FROM_BACK(i);
 				}
 			}
