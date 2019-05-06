@@ -33,7 +33,7 @@ struct JobContext
 	OutputVec* output_vec;
 	std::vector<IntermediateVec>* inter_vecs;
 	pthread_mutex_t *mutex1, *mutex2;
-	sem_t *sema;
+	sem_t *sema, *sema_lock_shuffle, *sema_lock_inter_vec;
 	std::atomic<unsigned int>* atomic_done;
 };
 struct ThreadContext
@@ -75,7 +75,13 @@ void* do_work(void* arg)
 	if (tid == 0)
 	{	
 		(*(jc->atomic_done)) = 0;
-
+		/**
+		 *  added a semaphore called sema_lock_shuffle,
+		 *  this semaphore will lock the do_work until thread0 finished shuffling
+		 */
+		for(int i=0; i < jc->level; i++){
+            sem_post(jc->sema_lock_shuffle);
+        }
 		K2* max_key;
 		K2* temp_key;
 		IntermediatePair* ip;
@@ -136,14 +142,26 @@ void* do_work(void* arg)
     }
 	// TODO: one time use semaphore size of n (tid 0 should raise this sema to n after shuffle is done)
 	// reduce
+	/**
+	 * added a semaphore that is jc->level (#threads) size
+	 * should get to 0 only when shuffle is done.
+	 * each thread is decrementing it here
+	 */
+	sem_wait(jc->sema_lock_shuffle);
 	while(jc->atomic_done->load() < jc->inter_vecs->size())
 	{
 		// TODO: instead of mutex make a sema of 1 (?)
 		sem_wait(jc->sema);
-		pthread_mutex_lock(jc->mutex1);
+//		pthread_mutex_lock(jc->mutex1);
+        /**
+         * added a semaphore named sema_lock_inter_vec
+         * should replace mutex1 which is used here and also in reduce (via emit3)
+         */
+        sem_post(jc->sema_lock_inter_vec);
 		IntermediateVec* iv = &jc->inter_vecs->at(0);
-		jc->inter_vecs->erase(jc->inter_vecs->begin());
-		pthread_mutex_unlock(jc->mutex1);
+        jc->inter_vecs->erase(jc->inter_vecs->begin());
+        sem_wait(jc->sema_lock_inter_vec);
+//		pthread_mutex_unlock(jc->mutex1);
 		jc->client->reduce(iv, &tc);
 		(*(jc->atomic_done))++;
     }
@@ -166,8 +184,8 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 		ERR("mutex init")
 	}
 
-	sem_t sema;
-	if (sem_init(&sema, 0, 0))
+	sem_t sema, sema_lock_shuffle, sema_lock_inter_vec;
+	if (sem_init(&sema, 0, 0) || sem_init(&sema_lock_shuffle, 0 ,0) || sem_init(&sema_lock_inter_vec, 0 ,0))
 	{
 		ERR("semaphore init")
 	}
@@ -179,7 +197,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 
 	JobContext* jc = new JobContext({multiThreadLevel, threads, t_cons, js,
 									 barrier, &client, &inputVec, &outputVec, inter_vecs, &mutex1,
-									 &mutex2, &sema, atomic_done});
+									 &mutex2, &sema, &sema_lock_shuffle, &sema_lock_inter_vec, atomic_done});
 
 	jc->state->stage = MAP_STAGE;
 	for (int i = 0; i < multiThreadLevel; i++)
@@ -247,7 +265,7 @@ void closeJobHandle(JobHandle job)
 	if (pthread_mutex_destroy(jc->mutex1) || pthread_mutex_destroy(jc->mutex2)) {
 		ERR("mutex destroy")
 	}
-	if (sem_destroy(jc->sema)) {
+	if (sem_destroy(jc->sema) || sem_destroy(jc->sema_lock_shuffle)) {
 		ERR("semaphore destroy")
 	}
 
