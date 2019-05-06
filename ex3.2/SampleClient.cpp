@@ -1,6 +1,7 @@
 #include "MapReduceFramework.h"
 #include <cstdio>
-#include <string>
+#include <iostream>
+#include <string.h>
 #include <array>
 #include <unistd.h>
 
@@ -63,6 +64,13 @@ public:
 		usleep(150000);
 		emit3(k3, v3, context);
 	}
+	static void print_iv(const IntermediateVec* iv) {
+		std::cout<<"### printing iv ###"<<std::endl;
+		for (int i=0; i<iv->size; i++) {
+			std::cout<<"["<<((KChar*)iv->at(i).first)->c <<"]["<< ((VCount*)iv->at(i).second)->count<<"]"<<std::endl;
+		}
+	}
+
 };
 
 
