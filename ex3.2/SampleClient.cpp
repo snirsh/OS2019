@@ -64,11 +64,8 @@ public:
 		usleep(150000);
 		emit3(k3, v3, context);
 	}
-	static void print_iv(IntermediateVec* iv) {
-		std::cout<<"### printing iv ###"<<std::endl;
-		for (int i=0; i<iv->size(); i++) {
-			std::cout<<"["<<((KChar*)iv->at(i).first)->c <<"]["<< ((VCount*)iv->at(i).second)->count<<"]"<<std::endl;
-		}
+	static void print_pair(IntermediatePair* ip) {
+		std::cout<<"["<<((KChar*)ip->first)->c <<"]["<< ((VCount*)ip->second)->count<<"]"<<std::endl;
 	}
 
 };

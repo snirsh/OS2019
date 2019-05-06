@@ -68,7 +68,10 @@ void* do_work(void* arg)
 	}
 	// sort
 	std::sort(tc->inter_vec->begin(), tc->inter_vec->end());
-	jc->client->print_iv(tc->inter_vec);
+	MSG("sorted innter_vec:")
+	for (int i=0; i < tc->inter_vec->size(); i++) {
+		jc->client->print_pair(&tc->inter_vec->at(i));
+	}
 
 	MSG("reached barrier - tid: " << tid)
 	jc->barrier->barrier();
