@@ -6,8 +6,8 @@
 #include <sstream>
 #include <unistd.h>
 
-#include "../../MapReduceClient.h"
-#include "../../MapReduceFramework.h"
+#include "MapReduceClient.h"
+#include "MapReduceFramework.h"
 
 const int SLEEP_US = 20;
 
