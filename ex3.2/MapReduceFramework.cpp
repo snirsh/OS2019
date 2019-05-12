@@ -149,6 +149,7 @@ void* do_work(void* arg)
 		pthread_mutex_unlock(jc->mutex1);
 		jc->client->reduce(iv, tc);
 		(*(jc->atomic_done))++;
+		delete iv;
 	}
 	return nullptr;
 }
@@ -221,21 +222,23 @@ void waitForJob(JobHandle job)
 void emit2 (K2* key, V2* value, void* context)
 {
 	ThreadContext* tc = (ThreadContext*)context;
-	IntermediatePair* p = new IntermediatePair(key, value);
+	//IntermediatePair* p = new IntermediatePair(key, value);
+	IntermediatePair p = IntermediatePair(key, value);
 	IntermediateVec* vec = tc->inter_vec;
 	auto it = vec->begin();
-	vec->insert(it, *p);
+	vec->insert(it, p);
 }
 
 void emit3 (K3* key, V3* value, void* context)
 {	
 	ThreadContext* tc = (ThreadContext*)context;
-	OutputPair* p = new OutputPair(key, value);
+	//OutputPair* p = new OutputPair(key, value);
+	OutputPair p = OutputPair(key, value);
 	JobContext* jc = tc->jc;
 	OutputVec* vec = jc->output_vec;
 	pthread_mutex_lock(jc->mutex2);
 	auto it = vec->begin();
-	vec->insert(it, *p);
+	vec->insert(it, p);
 	pthread_mutex_unlock(jc->mutex2);
 }
 
@@ -272,11 +275,13 @@ void closeJobHandle(JobHandle job)
 		}
 		delete jc->threads[i];
 		delete t_cons[i]->inter_vec;
-		delete t_cons[i];
 	}
+	delete[] t_cons;
 
-	delete jc->barrier;
 	delete[] jc->threads;
+	delete jc->barrier;
+	delete jc->inter_vecs;
+	delete jc->atomic_done;
 	delete jc->state;
 	delete jc->mutex1;
 	delete jc->mutex2;
