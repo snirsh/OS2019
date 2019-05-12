@@ -39,5 +39,5 @@ testo:
 	#./testo
 
 valgrind:
-	valgrind --leak-check=full --show-possibly-lost=yes --show-reachable=yes --undef-value-errors=no testo
+	valgrind --leak-check=full --show-possibly-lost=no --show-reachable=no --undef-value-errors=no testo
 
