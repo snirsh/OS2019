@@ -37,3 +37,6 @@ testo:
 	$(CC) -pthread -g -std=c++11 -o testo SampleClient.cpp libMapReduceFramework.a
 	chmod 777 testo
 	#./testo
+
+valgrind:
+	valgrind --leak-check=full --show-possibly-lost=yes --show-reachable=yes --undef-value-errors=yes testo
