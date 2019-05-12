@@ -3,10 +3,9 @@
 #include <iostream>
 #include <atomic>
 #include <algorithm>
+#include <unistd.h>
 #include "MapReduceClient.h"
 #include "Barrier.h"
-#include <unistd.h>
-
 
 // DEFS
 #define ERR(msg) std::cerr << "error: " << msg << std::endl; exit(1);
@@ -54,8 +53,6 @@ void* do_work(void* arg)
 	JobContext* jc = tc->jc;
 	int tid = tc->tid;
 
-	MSG("working - tid: " << tid)
-
 	// map
 	unsigned int input_size = jc->input_vec->size();
 	unsigned int temp = jc->atomic_done->load();
@@ -64,16 +61,13 @@ void* do_work(void* arg)
 		temp = (*(jc->atomic_done))++;
 		InputPair ip = jc->input_vec->at(temp);
 		jc->client->map(ip.first, ip.second, arg);
-		MSG("tid "<<tid<< " mapping i="<<temp)
 		temp = jc->atomic_done->load();
 	}
 	// sort
 	std::sort(tc->inter_vec->begin(), tc->inter_vec->end());
 
-	MSG("reached barrier - tid: " << tid)
 	jc->barrier->barrier();
 	jc->state->stage = REDUCE_STAGE;
-	MSG("crossed barrier - tid: " << tid)
 
 	//shuffle
 	if (tid == 0)
@@ -125,7 +119,6 @@ void* do_work(void* arg)
 				}
 			}
 			// add new vector to the batch to be processed by other threads
-			MSG("pushing new vector to inter_vecs, size:  " << temp_iv->size())
 			jc->total++;
 			jc->inter_vecs->push_back(temp_iv);
 			sem_post(jc->sema);
@@ -155,7 +148,6 @@ void* do_work(void* arg)
 		pthread_mutex_unlock(jc->mutex1);
 		jc->client->reduce(iv, tc);
 		(*(jc->atomic_done))++;
-		MSG("reduced! done: "<<jc->atomic_done->load())
 	}
 	return nullptr;
 }
