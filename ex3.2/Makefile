@@ -49,3 +49,7 @@ tarantino:
 
 valgrind:
 	valgrind --leak-check=full --show-possibly-lost=yes --show-reachable=yes --undef-value-errors=yes testo
+
+valgrindt:
+	valgrind --leak-check=full --show-possibly-lost=yes --show-reachable=yes --undef-value-errors=yes tarantino
+
