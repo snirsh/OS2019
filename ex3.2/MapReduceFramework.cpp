@@ -55,13 +55,14 @@ void* do_work(void* arg)
 
 	// map
 	unsigned int input_size = jc->input_vec->size();
-	unsigned int temp = jc->atomic_done->load();
-	while (temp < input_size)
+	unsigned int cur_index = jc->atomic_done->load();
+	InputPair ip = InputPair();
+	while (cur_index < input_size)
 	{
-		temp = (*(jc->atomic_done))++;
-		InputPair ip = jc->input_vec->at(temp);
+		cur_index = (*(jc->atomic_done))++;
+		ip = jc->input_vec->at(cur_index);
 		jc->client->map(ip.first, ip.second, arg);
-		temp = jc->atomic_done->load();
+		cur_index = jc->atomic_done->load();
 	}
 	// sort
 	std::sort(tc->inter_vec->begin(), tc->inter_vec->end());
@@ -243,7 +244,7 @@ void getJobState(JobHandle job, JobState* state)
 	JobContext* jc = (JobContext*)job;
 	JobState* js = jc->state;
 	state->stage = js->stage;
-	int total;
+	int total = 1;
 	if (js->stage == MAP_STAGE) {
 		total = jc->input_vec->size();
 	}
