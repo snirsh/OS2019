@@ -182,7 +182,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 		ERR("sem_init")
 	}
 
-    std::atomic<unsigned int>* atomic_done = new std::atomic<unsigned int>;
+    std::atomic<unsigned int>* atomic_done= new std::atomic<unsigned int>;
 	CHECK_NULLPTR(atomic_done, "atomic_done init")
 	
 	auto inter_vecs = new std::vector<IntermediateVec*>();
@@ -276,7 +276,7 @@ void closeJobHandle(JobHandle job)
 	}
 
 	delete jc->barrier;
-	delete jc->threads;
+	delete[] jc->threads;
 	delete jc->state;
 	delete jc->mutex1;
 	delete jc->mutex2;

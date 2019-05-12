@@ -68,7 +68,7 @@ public:
         {
             return;
         }
-        cout << "Starting job on file: " << path << endl;
+//        cout << "Starting job on file: " << path << endl;
         handle = startMapReduceJob(client, input, output, mtLevel);
     }
 
@@ -83,11 +83,11 @@ public:
         getJobState(handle, &newState);
         if (newState.stage != state.stage || newState.percentage != state.percentage)
         {
-            printf("Thread [%d]: at stage [%d], [%f]%% \n", id, state.stage, state.percentage);
+//            printf("Thread [%d]: at stage [%d], [%f]%% \n", id, state.stage, state.percentage);
             state = newState;
             if (isDone())
             {
-                printf("Thread [%d] done!\n", id);
+//                printf("Thread [%d] done!\n", id);
                 return true;
             }
         }
