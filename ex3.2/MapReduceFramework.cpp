@@ -222,7 +222,6 @@ void waitForJob(JobHandle job)
 void emit2 (K2* key, V2* value, void* context)
 {
 	ThreadContext* tc = (ThreadContext*)context;
-	//IntermediatePair* p = new IntermediatePair(key, value);
 	IntermediatePair p = IntermediatePair(key, value);
 	IntermediateVec* vec = tc->inter_vec;
 	auto it = vec->begin();
@@ -232,7 +231,6 @@ void emit2 (K2* key, V2* value, void* context)
 void emit3 (K3* key, V3* value, void* context)
 {	
 	ThreadContext* tc = (ThreadContext*)context;
-	//OutputPair* p = new OutputPair(key, value);
 	OutputPair p = OutputPair(key, value);
 	JobContext* jc = tc->jc;
 	OutputVec* vec = jc->output_vec;
@@ -277,14 +275,13 @@ void closeJobHandle(JobHandle job)
 		delete t_cons[i]->inter_vec;
 	}
 	delete[] t_cons;
-
 	delete[] jc->threads;
-	delete jc->barrier;
-	delete jc->inter_vecs;
 	delete jc->atomic_done;
-	delete jc->state;
+	delete jc->inter_vecs;
+	delete jc->barrier;
 	delete jc->mutex1;
 	delete jc->mutex2;
+	delete jc->state;
 	delete jc->sema;
 	delete jc;
 }
