@@ -26,8 +26,8 @@ $(TARGETS): $(LIBOBJ)
 clean:
 	$(RM) $(TARGETS) $(LIBNAME) $(OBJ) $(LIBOBJ) *~ *core testo
 	
-cleantarantino:
-	$(RM) $(TARGETS) $(LIBNAME) $(OBJ) $(LIBOBJ) *~ *core tarantino
+cleaneu:
+	$(RM) $(TARGETS) $(LIBNAME) $(OBJ) $(LIBOBJ) *~ *core eu
 
 depend:
 	makedepend -- $(CFLAGS) -- $(SRC) $(LIBSRC)
@@ -41,15 +41,15 @@ testo:
 	chmod 777 testo
 	#./testo
 
-tarantino:
+eu:
 	make
-	$(CC) -pthread -g -std=c++11 -o tarantino WordFrequencies.cpp WordFrequenciesClient.hpp libMapReduceFramework.a
-	chmod 777 tarantino
-	#./tarantino
+	$(CC) -pthread -g -std=c++11 -o eu eurovisionClient.cpp libMapReduceFramework.a
+	chmod 777 eu
+	#./eu
 
 valgrind:
 	valgrind --leak-check=full --show-possibly-lost=yes --show-reachable=yes --undef-value-errors=no testo
 
 valgrindt:
-	valgrind --leak-check=full --show-possibly-lost=yes --show-reachable=yes --undef-value-errors=no tarantino
+	valgrind --leak-check=full --show-possibly-lost=yes --show-reachable=yes --undef-value-errors=no eu
 
