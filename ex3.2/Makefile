@@ -25,6 +25,9 @@ $(TARGETS): $(LIBOBJ)
 
 clean:
 	$(RM) $(TARGETS) $(LIBNAME) $(OBJ) $(LIBOBJ) *~ *core testo
+	
+cleantarantino:
+	$(RM) $(TARGETS) $(LIBNAME) $(OBJ) $(LIBOBJ) *~ *core tarantino
 
 depend:
 	makedepend -- $(CFLAGS) -- $(SRC) $(LIBSRC)
@@ -37,6 +40,12 @@ testo:
 	$(CC) -pthread -g -std=c++11 -o testo SampleClient.cpp libMapReduceFramework.a
 	chmod 777 testo
 	#./testo
+
+tarantino:
+	make
+	$(CC) -pthread -g -std=c++11 -o tarantino WordFrequencies.cpp WordFrequenciesClient.hpp libMapReduceFramework.a
+	chmod 777 tarantino
+	#./tarantino
 
 valgrind:
 	valgrind --leak-check=full --show-possibly-lost=yes --show-reachable=yes --undef-value-errors=yes testo
