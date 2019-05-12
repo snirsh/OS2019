@@ -273,6 +273,7 @@ void closeJobHandle(JobHandle job)
 		}
 		delete jc->threads[i];
 		delete t_cons[i]->inter_vec;
+		delete t_cons[i];
 	}
 	delete[] t_cons;
 	delete[] jc->threads;
