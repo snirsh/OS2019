@@ -30,7 +30,7 @@ depend:
 	makedepend -- $(CFLAGS) -- $(SRC) $(LIBSRC)
 
 tar:
-	$(TAR) $(TARFLAGS) $(TARNAME) $(TARSRCS)
+	$(TAR) $(TARFLAGS) $(TARNAME) $(TARSRCS) Barrier.h
 
 testo:
 	make
