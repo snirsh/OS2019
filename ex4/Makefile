@@ -6,8 +6,8 @@ LIBSRC=VirtualMemory.cpp
 LIBOBJ=$(LIBSRC:.cpp=.o)
 
 INCS=-I.
-CFLAGS = -Wall -std=c++11 -pthread -g $(INCS)
-CXXFLAGS = -Wall -std=c++11 -pthread -g $(INCS)
+CFLAGS = -Wall -std=c++11 -g $(INCS)
+CXXFLAGS = -Wall -std=c++11 -g $(INCS)
 
 LIBNAME = libVirtualMemory.a
 TARGETS = $(LIBNAME)
@@ -34,6 +34,5 @@ tar:
 
 testo:
 	make
-	$(CC) -pthread -g -std=c++11 -o testo SimpleTest.cpp libVirtualMemory.a
+	$(CC) -g -std=c++11 -o testo SimpleTest.cpp PhysicalMemory.cpp $(LIBNAME)
 	chmod 777 testo
-	./testo
