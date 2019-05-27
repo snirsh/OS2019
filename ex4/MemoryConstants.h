@@ -31,4 +31,5 @@ typedef int word_t;
 // number of pages in the virtual memory
 #define NUM_PAGES (VIRTUAL_MEMORY_SIZE / PAGE_SIZE)
 
-#define TABLES_DEPTH ((VIRTUAL_ADDRESS_WIDTH - 1) / OFFSET_WIDTH)
+#define CEIL(VARIABLE) ( (VARIABLE - (int)VARIABLE)==0 ? (int)VARIABLE : (int)VARIABLE+1 )
+#define TABLES_DEPTH CEIL((((VIRTUAL_ADDRESS_WIDTH - OFFSET_WIDTH) / (double)OFFSET_WIDTH)))

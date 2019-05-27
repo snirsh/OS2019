@@ -1,0 +1,39 @@
+CC=g++
+CXX=g++
+RANLIB=ranlib
+
+LIBSRC=VirtualMemory.cpp
+LIBOBJ=$(LIBSRC:.cpp=.o)
+
+INCS=-I.
+CFLAGS = -Wall -std=c++11 -pthread -g $(INCS)
+CXXFLAGS = -Wall -std=c++11 -pthread -g $(INCS)
+
+LIBNAME = libVirtualMemory.a
+TARGETS = $(LIBNAME)
+
+TAR=tar
+TARFLAGS=-cvf
+TARNAME=ex4.tar
+TARSRCS=$(LIBSRC) Makefile README
+
+all: $(TARGETS)
+
+$(TARGETS): $(LIBOBJ)
+	$(AR) $(ARFLAGS) $@ $^
+	$(RANLIB) $@
+
+clean:
+	$(RM) $(TARGETS) $(LIBNAME) $(OBJ) $(LIBOBJ) *~ *core testo
+
+depend:
+	makedepend -- $(CFLAGS) -- $(SRC) $(LIBSRC)
+
+tar:
+	$(TAR) $(TARFLAGS) $(TARNAME) $(TARSRCS)
+
+testo:
+	make
+	$(CC) -pthread -g -std=c++11 -o testo SimpleTest.cpp libVirtualMemory.a
+	chmod 777 testo
+	./testo
