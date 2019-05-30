@@ -55,10 +55,10 @@ frame_wrapper rec_helper(uint64_t index, uint64_t ignore) {
 
 uint64_t find_frame(uint64_t ignore) {
     frame_wrapper ret = rec_helper(0, ignore);
-    if (ret % 2 == 0) {
-        return ret >> 1;
+    if (ret.type == EMPTY) {
+        return ret.index;
     } else {
-        return (ret >> 1) + 1;
+        return ret.index + 1;
     }
 }
 
