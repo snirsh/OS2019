@@ -4,6 +4,12 @@
 #include <cassert>
 
 int main(int argc, char **argv) {
+
+    word_t value;
+    VMinitialize();
+    VMwrite(1, 123);
+
+    /*
     VMinitialize();
     for (uint64_t i = 0; i < (2 * NUM_FRAMES); ++i) {
         printf("writing to %llu\n", (long long int) i);
@@ -17,6 +23,6 @@ int main(int argc, char **argv) {
         assert(uint64_t(value) == i);
     }
     printf("success\n");
-
+    */
     return 0;
 }
