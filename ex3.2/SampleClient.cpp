@@ -5,6 +5,8 @@
 #include <array>
 #include <unistd.h>
 
+#define MSG(msg) std::cout << msg << std::endl;
+
 class VString : public V1 {
 public:
 	VString(std::string content) : content(content) { }
@@ -65,6 +67,12 @@ public:
 		VCount* v3 = new VCount(count);
 		usleep(150000);
 		emit3(k3, v3, context);
+	}
+
+	void print_pair(IntermediatePair* ip) const {
+		char c = ((const KChar*)ip->first)->c;
+		int count = ((const VCount*)ip->second)->count;
+		MSG("["<<c<<"] ["<<count<<"]")
 	}
 };
 
