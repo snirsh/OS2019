@@ -1,7 +1,9 @@
 #include "VirtualMemory.h"
-
+#include <iostream>
 #include <cstdio>
 #include <cassert>
+
+#define MSG(msg) std::cout << msg << std::endl;
 
 int main(int argc, char **argv) {
 
@@ -9,6 +11,9 @@ int main(int argc, char **argv) {
     VMinitialize();
     VMwrite(13, 3);
     printPM();
+    VMread(13, &value);
+    MSG("READ: "<<value)
+
 
     /*
     VMinitialize();
