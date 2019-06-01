@@ -97,14 +97,14 @@ int load_page(uint64_t v_addr) {
         offset = (v_addr >> (OFFSET_WIDTH * i)) % PAGE_SIZE;
         PMread(addr1 * PAGE_SIZE + offset, &addr2);
         MSG("           offset: "<<offset)
-        MSG("           [PM read] index: "<<addr1 * PAGE_SIZE + offset<<"  value: "<<addr2)
         if (addr2 == 0) {
             uint64_t frame = find_frame(addr1);
             MSG("           found frame: "<<frame)
             // make generic
             PMwrite(frame*PAGE_SIZE, 0);
-            PMwrite(frame*PAGE_SIZE + 1, 0);
-            PMwrite(addr1 * PAGE_SIZE + offset, frame);
+            PMwrite((frame*PAGE_SIZE) + 1, 0);
+            PMwrite((addr1 * PAGE_SIZE) + offset, frame);
+            MSG("           [PM write] index: "<<(addr1 * PAGE_SIZE) + offset<<"  value: "<<frame)
             addr1 = frame;
         } else {
             addr1 = addr2;
