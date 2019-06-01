@@ -147,4 +147,12 @@ int VMwrite(uint64_t virtualAddress, word_t value) {
     return 1;
 }
 
+void printPM() {
+    word_t temp;
+    for (int i=0; i<RAM_SIZE; ++i) {
+        PMread(i, &temp);
+        MSG("["<<i<<"] ["<<temp<<"]")
+    }
+}
+
 
