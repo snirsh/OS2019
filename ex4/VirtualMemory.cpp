@@ -30,7 +30,7 @@ void VMinitialize() {
 }
 
 frame_wrapper rec_helper(word_t index, word_t ignore) {
-    usleep(200);
+    usleep(2000);
     word_t w, max=0;
     frame_wrapper ret = frame_wrapper({0, EMPTY});
     
