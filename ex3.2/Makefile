@@ -40,7 +40,7 @@ testo:
 
 tarant:
 	make
-	$(CC) -pthread -g -std=c++11 -o tarant Tarantino/WordFrequencies.cpp libMapReduceFramework.a
+	$(CC) -pthread -g -std=c++11 -o tarant Tarantino/WordFrequencies.cpp MapReduceClient.h libMapReduceFramework.a
 	chmod 777 tarant
 	./tarant
 
