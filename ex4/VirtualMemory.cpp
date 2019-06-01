@@ -36,7 +36,7 @@ frame_wrapper rec_helper(word_t index, word_t ignore) {
     
     for (word_t i=0; i < PAGE_SIZE; ++i) {
         PMread((index*PAGE_SIZE)+i, &w);
-        //MSG("               i="<<i<<"  w="<<w)
+        MSG("               i="<<i<<"  w="<<w)
         if (w) {
             MSG("               calling rec on "<<w)
             ret = rec_helper(w, ignore);
@@ -108,7 +108,6 @@ int load_page(uint64_t v_addr) {
         MSG("           offset: "<<offset)
         if (addr2 == 0) {
             word_t frame = find_frame(addr1);
-            MSG("           found frame: "<<frame)
             // make generic
             PMwrite(frame*PAGE_SIZE, 0);
             PMwrite((frame*PAGE_SIZE) + 1, 0);
@@ -116,6 +115,7 @@ int load_page(uint64_t v_addr) {
             addr1 = frame;
         } else {
             addr1 = addr2;
+            MSG("           found ref: "<<addr2)
         }
     }
 }
