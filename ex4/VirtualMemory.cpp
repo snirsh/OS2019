@@ -57,6 +57,7 @@ frame_wrapper rec_helper(uint64_t index, uint64_t ignore) {
 uint64_t find_frame(uint64_t ignore) {
     frame_wrapper ret = rec_helper(0, ignore);
     if (ret.type == EMPTY) {
+        MSG("               find_frame: index="<<ret.index)
         return ret.index;
     } else if (ret.type == MAX) {
         if (ret.index == PAGE_SIZE-1) {
