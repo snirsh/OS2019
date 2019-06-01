@@ -29,6 +29,9 @@ void VMinitialize() {
 }
 
 frame_wrapper rec_helper(uint64_t index, uint64_t ignore) {
+    word_t temp;
+    PMread(2, &temp);
+    MSG("*** PM[2] = "<<temp)
 
     word_t w, max=0;
     frame_wrapper ret = frame_wrapper({0, EMPTY});
