@@ -38,6 +38,7 @@ frame_wrapper rec_helper(uint64_t index, uint64_t ignore) {
         PMread((index*PAGE_SIZE)+i, &w);
         MSG("               i="<<i<<"  w="<<w)
         if (w) {
+            MSG("               calling rec on "<<w)
             ret = rec_helper(w, ignore);
             if (ret.type == EMPTY) {
                 return ret;
@@ -101,8 +102,8 @@ int load_page(uint64_t v_addr) {
             uint64_t frame = find_frame(addr1);
             MSG("           found frame: "<<frame)
             // make generic
-            PMwrite(frame, 0);
-            PMwrite(frame + 1, 0);
+            PMwrite(frame*PAGE_SIZE, 0);
+            PMwrite(frame*PAGE_SIZE + 1, 0);
             PMwrite(addr1 * PAGE_SIZE + offset, frame);
             addr1 = frame;
         } else {
