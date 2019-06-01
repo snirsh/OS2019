@@ -31,7 +31,7 @@ void VMinitialize() {
 frame_wrapper rec_helper(uint64_t index, uint64_t ignore) {
 
     word_t w;
-    frame_wrapper ret;
+    frame_wrapper ret = frame_wrapper({0, EMPTY});
     uint64_t max = 0;
     
     for (uint64_t i=0; i < PAGE_SIZE; ++i) {
