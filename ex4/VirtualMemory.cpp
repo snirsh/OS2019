@@ -28,16 +28,13 @@ void VMinitialize() {
     clearTable(0);
 }
 
-frame_wrapper rec_helper(uint64_t index, uint64_t ignore) {
-    word_t temp;
-    PMread(2, &temp);
+frame_wrapper rec_helper(word_t index, word_t ignore) {
 
     word_t w, max=0;
     frame_wrapper ret = frame_wrapper({0, EMPTY});
     
     for (word_t i=0; i < PAGE_SIZE; ++i) {
         PMread((index*PAGE_SIZE)+i, &w);
-        MSG("**** Reading from = "<<(index*PAGE_SIZE)+i)
         MSG("               i="<<i<<"  w="<<w)
         if (w) {
             MSG("               calling rec on "<<w)
@@ -48,20 +45,25 @@ frame_wrapper rec_helper(uint64_t index, uint64_t ignore) {
         }
         if (w > max) { max = w; }
         if (ret.index > max) { max = ret.index; }
+        if (index > max) { max = index; }
     }
     MSG("               max, index, ignore: "<<max<<" "<<index<<" "<<ignore)
     if (max == 0) {
         if (index == 0) {
             ret = frame_wrapper({1, EMPTY});
+            return ret;
         }
         if (index != ignore) {
             ret = frame_wrapper({index, EMPTY});
+            return ret;
         }
-    } else {
-        ret = frame_wrapper({max, MAX});
+    if (index > max) {
+        ret = frame_wrapper({index, MAX});
+        return ret; 
     }
-    // what if page is full? DISTANCE
+    ret = frame_wrapper({max, MAX});
     return ret;
+    // what if page is full? DISTANCE
 }
 
 word_t find_frame(word_t ignore) {
