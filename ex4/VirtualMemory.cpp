@@ -63,6 +63,7 @@ uint64_t find_frame(uint64_t ignore) {
         if (ret.index == PAGE_SIZE-1) {
             // all full
         } else {
+            MSG("      BAD FUNCTION!         find_frame: index="<<ret.index)
             return ret.index + 1;
         }
     }
