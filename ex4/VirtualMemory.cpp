@@ -39,8 +39,8 @@ frame_wrapper rec_helper(word_t index, word_t ignore, word_t depth) {
         PMread((index*PAGE_SIZE)+i, &w);
         MSG("               i="<<i<<"  w="<<w)
         if (w) {
-            MSG("               calling rec on "<<w)
-            if (depth != TABLES_DEPTH-2) {
+            if (depth != TABLES_DEPTH-1) {
+                MSG("               calling rec on "<<w)
                 ret = rec_helper(w, ignore, depth+1);
                 if (ret.type == EMPTY) {
                     return ret;
