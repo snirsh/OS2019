@@ -11,8 +11,8 @@ int main(int argc, char **argv) {
     VMinitialize();
     VMwrite(13, 3);
     printPM();
-    VMread(13, &value);
-    MSG("READ: "<<value)
+    VMread(6, &value);
+    printPM();
 
 
     /*
