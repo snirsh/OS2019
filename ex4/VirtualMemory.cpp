@@ -37,7 +37,7 @@ frame_wrapper rec_helper(uint64_t index, uint64_t ignore) {
     for (uint64_t i=0; i < PAGE_SIZE; ++i) {
         PMread((index*PAGE_SIZE)+i, &w);
         MSG("               i="<<i<<"  w="<<w)
-        if (!w) {
+        if (w) {
             ret = rec_helper(w, ignore);
             if (ret.type == EMPTY) {
                 return ret;
