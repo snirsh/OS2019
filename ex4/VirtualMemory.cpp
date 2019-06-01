@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unistd.h>
 #include "VirtualMemory.h"
 #include "PhysicalMemory.h"
 
@@ -29,7 +30,7 @@ void VMinitialize() {
 }
 
 frame_wrapper rec_helper(word_t index, word_t ignore) {
-
+    usleep(200);
     word_t w, max=0;
     frame_wrapper ret = frame_wrapper({0, EMPTY});
     
