@@ -74,13 +74,13 @@ frame_wrapper rec_helper(word_t index, word_t ignore) {
 word_t find_frame(word_t ignore) {
     frame_wrapper ret = rec_helper(0, ignore);
     if (ret.type == EMPTY) {
-        MSG("               find_frame: index="<<ret.index)
+        MSG("               [find_frame] EMPTY: index="<<ret.index)
         return ret.index;
     } else if (ret.type == MAX) {
         if (ret.index == RAM_SIZE-1) {
             // all full
         } else {
-            MSG("      BAD FUNCTION!         find_frame: index="<<ret.index)
+        MSG("               [find_frame] MAX: index="<<ret.index)
             return ret.index + 1;
         }
     }
@@ -112,7 +112,6 @@ int load_page(uint64_t v_addr) {
             PMwrite(frame*PAGE_SIZE, 0);
             PMwrite((frame*PAGE_SIZE) + 1, 0);
             PMwrite((addr1 * PAGE_SIZE) + offset, frame);
-            MSG("           [PM write] index: "<<(addr1 * PAGE_SIZE) + offset<<"  value: "<<frame)
             addr1 = frame;
         } else {
             addr1 = addr2;
