@@ -31,13 +31,13 @@ void VMinitialize() {
 frame_wrapper rec_helper(uint64_t index, uint64_t ignore) {
     word_t temp;
     PMread(2, &temp);
-    MSG("*** PM[2] = "<<temp)
 
     word_t w, max=0;
     frame_wrapper ret = frame_wrapper({0, EMPTY});
     
     for (word_t i=0; i < PAGE_SIZE; ++i) {
         PMread((index*PAGE_SIZE)+i, &w);
+        MSG("**** Reading from = "<<(index*PAGE_SIZE)+i)
         MSG("               i="<<i<<"  w="<<w)
         if (w) {
             MSG("               calling rec on "<<w)
