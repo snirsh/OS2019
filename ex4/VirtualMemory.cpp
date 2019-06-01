@@ -47,11 +47,17 @@ frame_wrapper rec_helper(uint64_t index, uint64_t ignore) {
         if (ret.index > max) { max = ret.index; }
     }
     // MSG("               max, index, ignore: "<<max<<" "<<index<<" "<<ignore)
-    if ((max == 0) && ((index != ignore) || !ignore)) {
-        ret = frame_wrapper({index, EMPTY});
+    if (max == 0) {
+        if (index == 0) {
+            ret = frame_wrapper({1, EMPTY});
+        }
+        if (index != ignore) {
+            ret = frame_wrapper({index, EMPTY});
+        }
     } else {
         ret = frame_wrapper({max, MAX});
     }
+    // what if page is full? DISTANCE
     return ret;
 }
 
@@ -94,8 +100,9 @@ int load_page(uint64_t v_addr) {
         if (addr2 == 0) {
             uint64_t frame = find_frame(addr1);
             MSG("           found frame: "<<frame)
-            PMwrite(frame << 1, 0);
-            PMwrite((frame << 1)+1, 0);
+            // make generic
+            PMwrite(frame, 0);
+            PMwrite(frame + 1, 0);
             PMwrite(addr1 * PAGE_SIZE + offset, frame);
             addr1 = frame;
         } else {
