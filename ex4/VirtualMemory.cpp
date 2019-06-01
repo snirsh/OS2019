@@ -6,7 +6,7 @@
 
 enum ret_type {EMPTY, MAX, DISTANCE};
 struct frame_wrapper {
-    uint64_t index;
+    word_t index;
     ret_type type;
 };
 
@@ -30,11 +30,10 @@ void VMinitialize() {
 
 frame_wrapper rec_helper(uint64_t index, uint64_t ignore) {
 
-    word_t w;
+    word_t w, max=0;
     frame_wrapper ret = frame_wrapper({0, EMPTY});
-    uint64_t max = 0;
     
-    for (uint64_t i=0; i < PAGE_SIZE; ++i) {
+    for (word_t i=0; i < PAGE_SIZE; ++i) {
         PMread((index*PAGE_SIZE)+i, &w);
         MSG("               i="<<i<<"  w="<<w)
         if (w) {
@@ -62,7 +61,7 @@ frame_wrapper rec_helper(uint64_t index, uint64_t ignore) {
     return ret;
 }
 
-uint64_t find_frame(uint64_t ignore) {
+word_t find_frame(word_t ignore) {
     frame_wrapper ret = rec_helper(0, ignore);
     if (ret.type == EMPTY) {
         MSG("               find_frame: index="<<ret.index)
@@ -80,10 +79,9 @@ uint64_t find_frame(uint64_t ignore) {
 int load_page(uint64_t v_addr) {
     MSG("   [load page] vAddr: "<<v_addr)
     MSG("")
-    uint64_t offset, addr1;
-    word_t addr2;
+    word_t offset, addr1, addr2;
     addr1 = 0;
-    for (uint64_t i = TABLES_DEPTH ; i >= 0; --i) {
+    for (int i = TABLES_DEPTH ; i >= 0; --i) {
     MSG("       depth: "<<TABLES_DEPTH-i)
         if (i == 0) {
             if (addr1 != addr2) {
@@ -98,7 +96,7 @@ int load_page(uint64_t v_addr) {
         PMread(addr1 * PAGE_SIZE + offset, &addr2);
         MSG("           offset: "<<offset)
         if (addr2 == 0) {
-            uint64_t frame = find_frame(addr1);
+            word_t frame = find_frame(addr1);
             MSG("           found frame: "<<frame)
             // make generic
             PMwrite(frame*PAGE_SIZE, 0);
@@ -114,7 +112,7 @@ int load_page(uint64_t v_addr) {
 
 int VMread(uint64_t virtualAddress, word_t* value) {
     word_t frame;
-    uint64_t offset = virtualAddress % PAGE_SIZE;
+    word_t offset = virtualAddress % PAGE_SIZE;
     MSG("[VM read] vAddr: "<<virtualAddress<<"  value: "<<*value)
     MSG("   offset: "<<offset)
     frame = load_page(virtualAddress);
@@ -128,7 +126,7 @@ int VMread(uint64_t virtualAddress, word_t* value) {
 
 int VMwrite(uint64_t virtualAddress, word_t value) {
     word_t frame;
-    uint64_t offset = virtualAddress % PAGE_SIZE;
+    word_t offset = virtualAddress % PAGE_SIZE;
     MSG("[VM write] vAddr: "<<virtualAddress<<"  value: "<<value)
     MSG("   offset: "<<offset)
     frame = load_page(virtualAddress);
