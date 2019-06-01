@@ -66,13 +66,13 @@ void* do_work(void* arg)
 	}
 	// sort
 	MSG("*** thread "<<tid<<" started sorting ***")
-	for (auto pair: *tc->inter_vec) {
-		jc->client->print_pair(&pair);
+	for (auto pair=tc->inter_vec->begin(); pair != tc->inter_vec->end(); pair++) {
+		jc->client->print_pair(&*pair);
 	}
 	std::sort(tc->inter_vec->begin(), tc->inter_vec->end());
 	MSG("*** thread "<<tid<<" finished sorting ***")
-	for (auto pair: *tc->inter_vec) {
-		jc->client->print_pair(&pair);
+	for (auto pair=tc->inter_vec->begin(); pair != tc->inter_vec->end(); pair++) {
+		jc->client->print_pair(&*pair);
 	}
 	jc->barrier->barrier();
 	jc->state->stage = REDUCE_STAGE;
