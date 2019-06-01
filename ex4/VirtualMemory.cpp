@@ -35,7 +35,7 @@ frame_wrapper rec_helper(word_t index, word_t ignore) {
     
     for (word_t i=0; i < PAGE_SIZE; ++i) {
         PMread((index*PAGE_SIZE)+i, &w);
-        MSG("               i="<<i<<"  w="<<w)
+        //MSG("               i="<<i<<"  w="<<w)
         if (w) {
             MSG("               calling rec on "<<w)
             ret = rec_helper(w, ignore);
@@ -47,26 +47,26 @@ frame_wrapper rec_helper(word_t index, word_t ignore) {
         if (ret.index > max) { max = ret.index; }
         if (index > max) { max = index; }
     }
-    MSG("               max, index, ignore: "<<max<<" "<<index<<" "<<ignore)
+    //MSG("               max, index, ignore: "<<max<<" "<<index<<" "<<ignore)
     if (max == 0) {
         if (index == 0) {
             ret = frame_wrapper({1, EMPTY});
-            MSG("                   rec return EMPTY "<< 1)
+            MSG("                   rec "<<index<<" return EMPTY "<< 1)
             return ret;
         }
         if (index != ignore) {
             ret = frame_wrapper({index, EMPTY});
-            MSG("                   rec return EMPTY "<< index)
+            MSG("                   rec "<<index<<" return EMPTY "<< index)
             return ret;
         }
     }
     if (index > max) {
         ret = frame_wrapper({index, MAX});
-        MSG("                   rec return MAX "<< index)
+        MSG("                   rec "<<index<<" return MAX "<< index)
         return ret; 
     }
     ret = frame_wrapper({max, MAX});
-    MSG("                   rec return MAX "<< max)
+    MSG("                   rec "<<index<<" return MAX "<< max)
     return ret;
     // what if page is full? DISTANCE
 }
