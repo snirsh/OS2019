@@ -5,7 +5,7 @@
 
 #define MSG(msg) std::cout << msg << std::endl;
 
-enum ret_type {EMPTY, MAX, DISTANCE};
+enum ret_type {EMPTY, MAX, DISTANCE, UNDEFINED};
 struct frame_wrapper {
     word_t index;
     ret_type type;
@@ -24,24 +24,27 @@ void VMinitialize() {
     MSG("+ VIRTUAL_MEMORY_SIZE: " << VIRTUAL_MEMORY_SIZE)
     MSG("+ NUM_FRAMES: " << NUM_FRAMES)
     MSG("+ NUM_PAGES: " << NUM_PAGES)
+    MSG("+ TABLES_DEPTH: " << TABLES_DEPTH)
     MSG("+++++++++++++++++++++++++++++++")
     MSG("")
     clearTable(0);
 }
 
-frame_wrapper rec_helper(word_t index, word_t ignore) {
+frame_wrapper rec_helper(word_t index, word_t ignore, word_t depth) {
     sleep(1);
     word_t w, max=0;
-    frame_wrapper ret = frame_wrapper({0, EMPTY});
+    frame_wrapper ret = frame_wrapper({0, UNDEFINED});
     
     for (word_t i=0; i < PAGE_SIZE; ++i) {
         PMread((index*PAGE_SIZE)+i, &w);
         MSG("               i="<<i<<"  w="<<w)
         if (w) {
             MSG("               calling rec on "<<w)
-            ret = rec_helper(w, ignore);
-            if (ret.type == EMPTY) {
-                return ret;
+            if (depth != TABLES_DEPTH-1) {
+                ret = rec_helper(w, ignore, depth+1);
+                if (ret.type == EMPTY) {
+                    return ret;
+                }
             }
         }
         if (w > max) { max = w; }
@@ -73,7 +76,7 @@ frame_wrapper rec_helper(word_t index, word_t ignore) {
 }
 
 word_t find_frame(word_t ignore) {
-    frame_wrapper ret = rec_helper(0, ignore);
+    frame_wrapper ret = rec_helper(0, ignore, 0);
     if (ret.type == EMPTY) {
         MSG("               [find_frame] EMPTY: index="<<ret.index)
         return ret.index;
