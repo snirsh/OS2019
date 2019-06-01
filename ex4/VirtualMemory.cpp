@@ -51,22 +51,22 @@ frame_wrapper rec_helper(word_t index, word_t ignore) {
     if (max == 0) {
         if (index == 0) {
             ret = frame_wrapper({1, EMPTY});
-            MSG("                   rec "<<index<<" return EMPTY "<< 1)
+            MSG("               rec "<<index<<" return EMPTY "<< 1)
             return ret;
         }
         if (index != ignore) {
             ret = frame_wrapper({index, EMPTY});
-            MSG("                   rec "<<index<<" return EMPTY "<< index)
+            MSG("               rec "<<index<<" return EMPTY "<< index)
             return ret;
         }
     }
     if (index > max) {
         ret = frame_wrapper({index, MAX});
-        MSG("                   rec "<<index<<" return MAX "<< index)
+        MSG("               rec "<<index<<" return MAX "<< index)
         return ret; 
     }
     ret = frame_wrapper({max, MAX});
-    MSG("                   rec "<<index<<" return MAX "<< max)
+    MSG("               rec "<<index<<" return MAX "<< max)
     return ret;
     // what if page is full? DISTANCE
 }
