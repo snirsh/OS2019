@@ -36,7 +36,7 @@ frame_wrapper rec_helper(uint64_t index, uint64_t ignore) {
     
     for (uint64_t i=0; i < PAGE_SIZE; ++i) {
         PMread((index*PAGE_SIZE)+i, &w);
-        MSG("               i="<<i<<"  w="<<w)
+        //MSG("               i="<<i<<"  w="<<w)
         if (w) {
             ret = rec_helper(w, ignore);
             if (ret.type == EMPTY) {
@@ -46,7 +46,7 @@ frame_wrapper rec_helper(uint64_t index, uint64_t ignore) {
         if (w > max) { max = w; }
         if (ret.index > max) { max = ret.index; }
     }
-    MSG("               max, index, ignore: "<<max<<" "<<index<<" "<<ignore)
+    // MSG("               max, index, ignore: "<<max<<" "<<index<<" "<<ignore)
     if ((max == 0) && ((index != ignore) || !ignore)) {
         ret = frame_wrapper({index, EMPTY});
     } else {
