@@ -77,7 +77,7 @@ word_t find_frame(word_t ignore) {
         MSG("               find_frame: index="<<ret.index)
         return ret.index;
     } else if (ret.type == MAX) {
-        if (ret.index == PAGE_SIZE-1) {
+        if (ret.index == RAM_SIZE-1) {
             // all full
         } else {
             MSG("      BAD FUNCTION!         find_frame: index="<<ret.index)
