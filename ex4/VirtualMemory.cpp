@@ -46,6 +46,7 @@ frame_wrapper rec_helper(uint64_t index, uint64_t ignore) {
         if (w > max) { max = w; }
         if (ret.index > max) { max = ret.index; }
     }
+    MSG("               max, index, ignore: "<<max<<" "<<index<<" "<<ignore)
     if ((max == 0) && ((index != ignore) || !ignore)) {
         ret = frame_wrapper({index, EMPTY});
     } else {
