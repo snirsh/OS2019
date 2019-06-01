@@ -7,7 +7,8 @@ int main(int argc, char **argv) {
 
     word_t value;
     VMinitialize();
-    VMwrite(1, 123);
+    VMwrite(13, 3);
+    printPM();
 
     /*
     VMinitialize();
