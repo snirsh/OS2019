@@ -57,6 +57,7 @@ frame_wrapper rec_helper(word_t index, word_t ignore) {
             ret = frame_wrapper({index, EMPTY});
             return ret;
         }
+    }
     if (index > max) {
         ret = frame_wrapper({index, MAX});
         return ret; 
