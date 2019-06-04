@@ -57,6 +57,7 @@ tree_node rec_helper(tree_node node)
     ret.ev.v_addr = node.ev.v_addr;
     ret.max = 0;
     ret.frame = 0;
+    ret.empty = false;
     
     for (word_t i=0; i < PAGE_SIZE; ++i) {
         PMread((node.frame * PAGE_SIZE) + i, &w);
