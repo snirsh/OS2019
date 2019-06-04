@@ -98,6 +98,7 @@ tree_node rec_helper(tree_node node)
             return ret;
         }
         if (ret.frame != ret.ignore) {
+            ret.frame = ret.frame + 1;
             ret.empty = true;
             MSG("               rec "<<node.frame<<" return EMPTY "<< ret.frame)
             return ret;
@@ -130,10 +131,6 @@ word_t find_frame(uint64_t page_num, word_t ignore)
         clearTable(node.ev.frame);
         PMwrite(node.ev.link, 0);
         return node.ev.frame;
-    } else {
-        MSG("               [find_frame] MAX: frame = "<<node.frame)
-        return node.frame + 1;
-    }
 }
 
 int load_page(uint64_t v_addr)
