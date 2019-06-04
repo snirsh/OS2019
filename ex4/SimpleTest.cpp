@@ -13,6 +13,7 @@ int main(int argc, char **argv) {
     printPM();
     VMread(6, &value);
     printPM();
+    VMread(31, &value);
 
 
     /*
