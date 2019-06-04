@@ -47,7 +47,7 @@ void VMinitialize()
 
 tree_node rec_helper(tree_node node)
 {
-    word_t w, max_index=0;
+    word_t w, max_index = 0;
     evict_info min_ev;
     min_ev.distance = PAGE_SIZE;
 
@@ -55,7 +55,6 @@ tree_node rec_helper(tree_node node)
     ret.ignore = node.ignore;
     ret.req_page = node.req_page;
     ret.ev.v_addr = node.ev.v_addr;
-    ret.max = 0;
     ret.frame = node.frame;
     ret.empty = false;
     
