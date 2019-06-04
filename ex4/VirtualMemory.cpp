@@ -92,7 +92,7 @@ tree_node rec_helper(tree_node node)
         if (ret.frame == 0) {
             ret.frame = 1;
             ret.empty = true;
-            MSG("               rec "<<node.frame<<" return EMPTY "<< ret.frame)
+            MSG("         **      rec "<<node.frame<<" return EMPTY "<< ret.frame)
             return ret;
         }
         if (ret.frame != ret.ignore) {
