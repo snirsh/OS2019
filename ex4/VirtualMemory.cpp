@@ -81,7 +81,7 @@ tree_node rec_helper(tree_node node)
             }
         }
         if (w > max_index) { max_index = w; }
-        if (node.frame > max_index) { max_index = node.frame; }
+        // if (node.frame > max_index) { max_index = node.frame; }
         if (ret.max > max_index) { max_index = ret.max; }
 
         if (ret.ev.distance < min_ev.distance) {
