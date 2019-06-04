@@ -131,6 +131,7 @@ word_t find_frame(uint64_t page_num, word_t ignore)
         clearTable(node.ev.frame);
         PMwrite(node.ev.link, 0);
         return node.ev.frame;
+    }
 }
 
 int load_page(uint64_t v_addr)
