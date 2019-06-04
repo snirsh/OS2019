@@ -93,7 +93,7 @@ tree_node rec_helper(tree_node node)
         if (ret.frame == 0) {
             ret.frame = 1;
             ret.empty = true;
-            MSG("         **      rec "<<node.frame<<" return EMPTY "<< ret.frame)
+            MSG("               rec "<<node.frame<<" return EMPTY "<< ret.frame)
             return ret;
         }
         if (ret.frame != ret.ignore) {
@@ -102,6 +102,7 @@ tree_node rec_helper(tree_node node)
             return ret;
         }
     }
+    ret.max = max_index;
     ret.ev = min_ev;
     MSG("               rec "<<ret.frame<<" return MAX "<< ret.max)
     return ret;
