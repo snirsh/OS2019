@@ -48,8 +48,8 @@ void VMinitialize()
 tree_node rec_helper(tree_node node)
 {
     word_t w, max_index = 0;
-    evict_info min_ev;
-    min_ev.distance = PAGE_SIZE;
+    evict_info max_ev;
+    max_ev.distance = 0;
 
     tree_node ret;
     ret.ignore = node.ignore;
@@ -84,21 +84,20 @@ tree_node rec_helper(tree_node node)
         // if (node.frame > max_index) { max_index = node.frame; }
         if (ret.max > max_index) { max_index = ret.max; }
 
-        if (ret.ev.distance < min_ev.distance) {
-            min_ev = ret.ev;
+        if (ret.ev.distance > max_ev.distance) {
+            max_ev = ret.ev;
         }
     }
 
     if (max_index == 0) {
-        if ((ret.frame + 1) != ret.ignore) {
-            ret.frame = ret.frame + 1;
+        if ((ret.frame != ret.ignore) || (ret.frame == 0)) {
             ret.empty = true;
             MSG("               rec "<<node.frame<<" return EMPTY "<< ret.frame)
             return ret;
         }
     }
     ret.max = max_index;
-    ret.ev = min_ev;
+    ret.ev = max_ev;
     MSG("               rec "<<ret.frame<<" return MAX "<< ret.max)
     return ret;
 }
@@ -112,15 +111,16 @@ word_t find_frame(uint64_t page_num, word_t ignore)
     node.req_page = page_num;
     node.ignore = ignore;
     node.ev.v_addr = 0;
-    node.ev.distance = PAGE_SIZE;
+    node.ev.distance = 0;
     node = rec_helper(node);
 
     if (node.empty) {
         MSG("               [find_frame] EMPTY: frame = "<<node.frame)
+        if (node.frame == 0) {return 1;}
         return node.frame;
-    } else if (node.max < RAM_SIZE - 1) {
-        MSG("               [find_frame] MAX: frame = "<<node.frame)
-        return node.frame;
+    } else if (node.max < NUM_FRAMES - 1) {
+        MSG("               [find_frame] MAX: frame = "<<node.max + 1)
+        return node.max + 1;
     } else {
         MSG("               [find_frame] EVICT: frame "<<node.ev.frame<<" to page "<<node.ev.v_addr)
         PMevict(node.ev.frame, node.ev.v_addr);
