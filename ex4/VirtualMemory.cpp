@@ -78,7 +78,6 @@ tree_node rec_helper(tree_node node)
                 ret.ev.frame = w;
                 ret.ev.link = (node.frame * PAGE_SIZE) + i;
                 MSG("               [LEAF] page: "<<ret.ev.v_addr<<"  frame: "<<w<<"  dist: "<<ret.ev.distance<<"  link: "<<ret.ev.link)
-                return ret;
             }
         }
         if (w > max_index) { max_index = w; }
@@ -119,7 +118,10 @@ word_t find_frame(uint64_t page_num, word_t ignore)
     if (node.empty) {
         MSG("               [find_frame] EMPTY: frame = "<<node.frame)
         return node.frame;
-    } else if (node.max == RAM_SIZE - 1) {
+    } else if (node.max < RAM_SIZE - 1) {
+        MSG("               [find_frame] MAX: frame = "<<node.frame)
+        return node.frame;
+    } else {
         MSG("               [find_frame] EVICT: frame "<<node.ev.frame<<" to page "<<node.ev.v_addr)
         PMevict(node.ev.frame, node.ev.v_addr);
         clearTable(node.ev.frame);
