@@ -91,13 +91,7 @@ tree_node rec_helper(tree_node node)
     }
 
     if (max_index == 0) {
-        if (ret.frame == 0) {
-            ret.frame = 1;
-            ret.empty = true;
-            MSG("               rec "<<node.frame<<" return EMPTY "<< ret.frame)
-            return ret;
-        }
-        if (ret.frame != ret.ignore) {
+        if ((ret.frame + 1) != ret.ignore) {
             ret.frame = ret.frame + 1;
             ret.empty = true;
             MSG("               rec "<<node.frame<<" return EMPTY "<< ret.frame)
