@@ -9,7 +9,7 @@ std::string indent = "            ";
 
 struct tree_node {
     uint64_t depth, req_page, ev_addr, ev_distance;
-    word_t frame, ignore, max, ev_frame, ev_link;
+    word_t frame, ignore, max, ev_frame, ev_link, empty_link;
     bool empty;
 };
 
@@ -54,6 +54,7 @@ tree_node rec_helper(tree_node node)
     ret.ev_addr = node.ev_addr;
     ret.frame = node.frame;
     ret.empty = false;
+    ret.empty_link = 0;
     ret.max = 0;
     ret.ev_distance = 0;
 
@@ -65,11 +66,11 @@ tree_node rec_helper(tree_node node)
                 ret.depth = node.depth + 1;
                 ret.ev_addr = (node.ev_addr << OFFSET_WIDTH) + i;
                 ret.frame = w;
+                ret.empty_link = (node.frame * PAGE_SIZE) + i;
                 MSG(indent<<"calling rec on frame "<<w)
                 ret = rec_helper(ret);
                 if (ret.empty) {
                     indent = indent.substr(0,indent.length() - 4);
-                    ret.ev_link = (node.frame * PAGE_SIZE) + i;
                     return ret;
                 }
             } else {
