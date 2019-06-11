@@ -8,8 +8,8 @@
 std::string indent = "            ";
 
 struct tree_node {
-    uint64_t depth, req_page, ev_addr, ev_distance, ev_link;
-    word_t frame, ignore, max, ev_frame;
+    uint64_t depth, req_page, ev_addr, ev_distance;
+    word_t frame, ignore, max, ev_frame, ev_link;
     bool empty;
 };
 
@@ -45,8 +45,8 @@ tree_node rec_helper(tree_node node)
     indent += "    ";
     word_t w, max_index = 0;
     uint64_t max_distance = 0;
-    uint64_t ev_addr, ev_link;
-    word_t ev_frame;
+    uint64_t ev_addr;
+    word_t ev_frame, ev_link;
 
     tree_node ret;
     ret.ignore = node.ignore;
@@ -69,6 +69,7 @@ tree_node rec_helper(tree_node node)
                 ret = rec_helper(ret);
                 if (ret.empty) {
                     indent = indent.substr(0,indent.length() - 4);
+                    ret.ev_link = (node.frame * PAGE_SIZE) + i;
                     return ret;
                 }
             } else {
@@ -124,6 +125,7 @@ word_t find_frame(uint64_t page_num, word_t ignore)
     if (node.empty) {
         MSG("           [find_frame] EMPTY: frame = "<<node.frame)
         if (node.frame == 0) {return 1;}
+        PMwrite(node.ev_link, 0);
         return node.frame;
     } else if (node.max < NUM_FRAMES - 1) {
         MSG("           [find_frame] MAX: frame = "<<node.max + 1)
