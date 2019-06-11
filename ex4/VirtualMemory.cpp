@@ -64,7 +64,7 @@ tree_node rec_helper(tree_node node)
                 ret.frame = w;
                 MSG("               calling rec on frame "<<w)
                 ret = rec_helper(ret);
-                if (ret.empty) {
+                if (ret.empty || ret.max ==  NUM_FRAMES - 1) {
                     return ret;
                 }
             } else {
@@ -76,10 +76,10 @@ tree_node rec_helper(tree_node node)
             }
         }
         if (w > max_index) { max_index = w; }
-        // if (node.frame > max_index) { max_index = node.frame; }
         if (ret.max > max_index) { max_index = ret.max; }
 
         if (ret.ev_distance > max_distance) {
+            MSG("               new max leaf. frame: "<<ret.ev_frame<<" distance: "<< ret.ev_distance)
             max_distance = ret.ev_distance;
             ev_frame = ret.ev_frame;
             ev_link = ret.ev_link;
