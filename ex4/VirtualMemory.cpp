@@ -5,6 +5,7 @@
 
 #define MSG(msg) std::cout << msg << std::endl;
 #define ABS(x) (x > 0 ? x : -x)
+std::string indent = "            ";
 
 struct tree_node {
     uint64_t depth, req_page, ev_addr, ev_distance, ev_link;
@@ -54,16 +55,17 @@ tree_node rec_helper(tree_node node)
     ret.empty = false;
     ret.max = 0;
     ret.ev_distance = 0;
-    
+
     for (word_t i=0; i < PAGE_SIZE; ++i) {
         PMread((node.frame * PAGE_SIZE) + i, &w);
-        MSG("               i="<<i<<"  w="<<w)
+        MSG(indent<<"i="<<i<<"  w="<<w)
         if (w) {
             if (node.depth < TABLES_DEPTH-1) {
                 ret.depth = node.depth + 1;
                 ret.ev_addr = (node.ev_addr << OFFSET_WIDTH) + i;
                 ret.frame = w;
-                MSG("               calling rec on frame "<<w)
+                MSG(indent<<"calling rec on frame "<<w)
+                indent += "    ";
                 ret = rec_helper(ret);
                 if (ret.empty || ret.max ==  NUM_FRAMES - 1) {
                     return ret;
@@ -73,14 +75,14 @@ tree_node rec_helper(tree_node node)
                 ret.ev_distance = get_distance(node.req_page, ret.ev_addr);
                 ret.ev_frame = w;
                 ret.ev_link = (node.frame * PAGE_SIZE) + i;
-                MSG("               [LEAF] page: "<<ret.ev_addr<<"  frame: "<<w<<"  dist: "<<ret.ev_distance<<"  link: "<<ret.ev_link)
+                MSG(indent<<"[LEAF] page: "<<ret.ev_addr<<"  frame: "<<w<<"  dist: "<<ret.ev_distance<<"  link: "<<ret.ev_link)
             }
         }
         if (w > max_index) { max_index = w; }
         if (ret.max > max_index) { max_index = ret.max; }
 
         if (ret.ev_distance > max_distance) {
-            MSG("               new max leaf. frame: "<<ret.ev_frame<<" distance: "<< ret.ev_distance)
+            MSG(indent<<"new max leaf. frame: "<<ret.ev_frame<<" distance: "<< ret.ev_distance)
             max_distance = ret.ev_distance;
             ev_frame = ret.ev_frame;
             ev_link = ret.ev_link;
@@ -91,7 +93,8 @@ tree_node rec_helper(tree_node node)
     if (max_index == 0) {
         if ((ret.frame != ret.ignore) || (ret.frame == 0)) {
             ret.empty = true;
-            MSG("               rec "<<node.frame<<" return EMPTY "<< ret.frame)
+            MSG(indent<<"rec "<<node.frame<<" return EMPTY "<< ret.frame)
+            indent = indent.substr(0,indent.length - 4);
             return ret;
         }
     }
@@ -100,7 +103,7 @@ tree_node rec_helper(tree_node node)
     ret.ev_frame = ev_frame;
     ret.ev_addr = ev_addr;
     ret.ev_link = ev_link;
-    MSG("               rec "<<ret.frame<<" return MAX "<< ret.max)
+    MSG(indent<<"rec "<<ret.frame<<" return MAX "<< ret.max)
     return ret;
 }
 
@@ -117,14 +120,14 @@ word_t find_frame(uint64_t page_num, word_t ignore)
     node = rec_helper(node);
 
     if (node.empty) {
-        MSG("               [find_frame] EMPTY: frame = "<<node.frame)
+        MSG("           [find_frame] EMPTY: frame = "<<node.frame)
         if (node.frame == 0) {return 1;}
         return node.frame;
     } else if (node.max < NUM_FRAMES - 1) {
-        MSG("               [find_frame] MAX: frame = "<<node.max + 1)
+        MSG("           [find_frame] MAX: frame = "<<node.max + 1)
         return node.max + 1;
     } else {
-        MSG("               [find_frame] EVICT: frame "<<node.ev_frame<<" to page "<<node.ev_addr)
+        MSG("           [find_frame] EVICT: frame "<<node.ev_frame<<" to page "<<node.ev_addr)
         PMevict(node.ev_frame, node.ev_addr);
         clearTable(node.ev_frame);
         PMwrite(node.ev_link, 0);
@@ -145,15 +148,14 @@ int load_page(uint64_t v_addr)
         if (i == 0) {
             if (addr1 != addr2) {
                 PMrestore(addr1, page_num);
-            MSG("           [PM restore] put page "<<page_num<<" in frame "<<addr1)
+            MSG("       [PM restore] put page "<<page_num<<" in frame "<<addr1)
             }
-            MSG("           page "<<page_num<<" already loaded in frame "<<addr1)
+            MSG("       page "<<page_num<<" already loaded in frame "<<addr1)
             MSG("")
             return addr1;
         }
         offset = (v_addr >> (OFFSET_WIDTH * i)) % PAGE_SIZE;
         PMread(addr1 * PAGE_SIZE + offset, &addr2);
-        MSG("           offset: "<<offset)
         if (addr2 == 0) {
             word_t frame = find_frame(page_num, addr1);
             clearTable(frame);
@@ -161,7 +163,7 @@ int load_page(uint64_t v_addr)
             addr1 = frame;
         } else {
             addr1 = addr2;
-            MSG("           found ref: "<<addr2)
+            MSG("       found ref: "<<addr2)
         }
     }
 }
