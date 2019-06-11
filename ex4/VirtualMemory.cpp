@@ -6,15 +6,9 @@
 #define MSG(msg) std::cout << msg << std::endl;
 #define ABS(x) (x > 0 ? x : -x)
 
-struct evict_info {
-    uint64_t v_addr, distance, link;
-    word_t frame;
-};
-
 struct tree_node {
-    uint64_t depth, req_page;
-    word_t frame, ignore, max;
-    evict_info ev;
+    uint64_t depth, req_page, ev_addr, ev_distance, ev_link;
+    word_t frame, ignore, max, ev_frame;
     bool empty;
 };
 
@@ -48,13 +42,14 @@ void VMinitialize()
 tree_node rec_helper(tree_node node)
 {
     word_t w, max_index = 0;
-    evict_info max_ev;
-    max_ev.distance = 0;
+    uint64_t max_distance = 0;
+    uint64_t ev_addr, ev_link;
+    word_t ev_frame;
 
     tree_node ret;
     ret.ignore = node.ignore;
     ret.req_page = node.req_page;
-    ret.ev.v_addr = node.ev.v_addr;
+    ret.ev_addr = node.ev_addr;
     ret.frame = node.frame;
     ret.empty = false;
     ret.max = 0;
@@ -65,7 +60,7 @@ tree_node rec_helper(tree_node node)
         if (w) {
             if (node.depth < TABLES_DEPTH-1) {
                 ret.depth = node.depth + 1;
-                ret.ev.v_addr = (node.ev.v_addr << OFFSET_WIDTH) + i;
+                ret.ev_addr = (node.ev_addr << OFFSET_WIDTH) + i;
                 ret.frame = w;
                 MSG("               calling rec on frame "<<w)
                 ret = rec_helper(ret);
@@ -73,22 +68,22 @@ tree_node rec_helper(tree_node node)
                     return ret;
                 }
             } else {
-                ret.ev.v_addr = (node.ev.v_addr << OFFSET_WIDTH) + i;
-                ret.ev.distance = get_distance(node.req_page, ret.ev.v_addr);
-                ret.ev.frame = w;
-                ret.ev.link = (node.frame * PAGE_SIZE) + i;
-                MSG("               [LEAF] page: "<<ret.ev.v_addr<<"  frame: "<<w<<"  dist: "<<ret.ev.distance<<"  link: "<<ret.ev.link)
+                ret.ev_addr = (node.ev_addr << OFFSET_WIDTH) + i;
+                ret.ev_distance = get_distance(node.req_page, ret.ev_addr);
+                ret.ev_frame = w;
+                ret.ev_link = (node.frame * PAGE_SIZE) + i;
+                MSG("               [LEAF] page: "<<ret.ev_addr<<"  frame: "<<w<<"  dist: "<<ret.ev_distance<<"  link: "<<ret.ev_link)
             }
         }
         if (w > max_index) { max_index = w; }
         // if (node.frame > max_index) { max_index = node.frame; }
         if (ret.max > max_index) { max_index = ret.max; }
 
-        if (ret.ev.distance > max_ev.distance) {
-            max_ev.distance = ret.ev.distance;
-            max_ev.frame = ret.ev.frame;
-            max_ev.link = ret.ev.link;
-            max_ev.v_addr = ret.ev.v_addr;
+        if (ret.ev_distance > max_distance) {
+            max_distance = ret.ev_distance;
+            ev_frame = ret.ev_frame;
+            ev_link = ret.ev_link;
+            ev_addr = ret.ev_addr;
         }
     }
 
@@ -100,10 +95,10 @@ tree_node rec_helper(tree_node node)
         }
     }
     ret.max = max_index;
-    ret.ev.distance = max_ev.distance;
-    ret.ev.frame = max_ev.frame;
-    ret.ev.v_addr = max_ev.v_addr;
-    ret.ev.link = max_ev.link;
+    ret.ev_distance = max_distance;
+    ret.ev_frame = ev_frame;
+    ret.ev_addr = ev_addr;
+    ret.ev_link = ev_link;
     MSG("               rec "<<ret.frame<<" return MAX "<< ret.max)
     return ret;
 }
@@ -116,8 +111,8 @@ word_t find_frame(uint64_t page_num, word_t ignore)
     node.empty = false;;
     node.req_page = page_num;
     node.ignore = ignore;
-    node.ev.v_addr = 0;
-    node.ev.distance = 0;
+    node.ev_addr = 0;
+    node.ev_distance = 0;
     node = rec_helper(node);
 
     if (node.empty) {
@@ -128,11 +123,11 @@ word_t find_frame(uint64_t page_num, word_t ignore)
         MSG("               [find_frame] MAX: frame = "<<node.max + 1)
         return node.max + 1;
     } else {
-        MSG("               [find_frame] EVICT: frame "<<node.ev.frame<<" to page "<<node.ev.v_addr)
-        PMevict(node.ev.frame, node.ev.v_addr);
-        clearTable(node.ev.frame);
-        PMwrite(node.ev.link, 0);
-        return node.ev.frame;
+        MSG("               [find_frame] EVICT: frame "<<node.ev_frame<<" to page "<<node.ev_addr)
+        PMevict(node.ev_frame, node.ev_addr);
+        clearTable(node.ev_frame);
+        PMwrite(node.ev_link, 0);
+        return node.ev_frame;
     }
 }
 
