@@ -53,6 +53,7 @@ tree_node rec_helper(tree_node node)
     ret.frame = node.frame;
     ret.empty = false;
     ret.max = 0;
+    ret.ev_distance = 0;
     
     for (word_t i=0; i < PAGE_SIZE; ++i) {
         PMread((node.frame * PAGE_SIZE) + i, &w);
