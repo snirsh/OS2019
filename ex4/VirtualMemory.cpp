@@ -18,9 +18,9 @@ struct tree_node {
     bool empty;
 };
 
-word_t get_distance(word_t page, word_t query)
+uint64_t get_distance(uint64_t page, uint64_t query)
 {
-    word_t temp = ABS(page - query);
+    uint64_t temp = ABS(page - query);
     return temp < (NUM_PAGES - temp) ? temp : (NUM_PAGES - temp);
 }
 
