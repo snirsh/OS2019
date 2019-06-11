@@ -10,7 +10,7 @@ std::string indent = "            ";
 struct tree_node {
     uint64_t depth, req_page, ev_addr, ev_distance;
     word_t frame, ignore, max, ev_frame, ev_link, empty_link;
-    bool empty;
+    bool empty, link_toggle;
 };
 
 uint64_t get_distance(uint64_t page, uint64_t query)
@@ -54,6 +54,7 @@ tree_node rec_helper(tree_node node)
     ret.ev_addr = node.ev_addr;
     ret.frame = node.frame;
     ret.empty = false;
+    ret.link_toggle = false;
     ret.empty_link = 0;
     ret.max = 0;
     ret.ev_distance = 0;
@@ -66,10 +67,13 @@ tree_node rec_helper(tree_node node)
                 ret.depth = node.depth + 1;
                 ret.ev_addr = (node.ev_addr << OFFSET_WIDTH) + i;
                 ret.frame = w;
-                ret.empty_link = (node.frame * PAGE_SIZE) + i;
                 MSG(indent<<"calling rec on frame "<<w)
                 ret = rec_helper(ret);
                 if (ret.empty) {
+                    if (ret.link_toggle) {
+                        ret.empty_link = (node.frame * PAGE_SIZE) + i;
+                        ret.link_toggle = false;
+                    }
                     indent = indent.substr(0,indent.length() - 4);
                     return ret;
                 }
@@ -96,6 +100,7 @@ tree_node rec_helper(tree_node node)
     if (max_index == 0) {
         if ((ret.frame != ret.ignore) || (ret.frame == 0)) {
             ret.empty = true;
+            ret.link_toggle = true;
             MSG(indent<<"rec "<<node.frame<<" return EMPTY "<< ret.frame)
             indent = indent.substr(0,indent.length() - 4);
             return ret;
