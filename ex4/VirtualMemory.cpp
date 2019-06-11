@@ -85,7 +85,10 @@ tree_node rec_helper(tree_node node)
         if (ret.max > max_index) { max_index = ret.max; }
 
         if (ret.ev.distance > max_ev.distance) {
-            max_ev = ret.ev;
+            max_ev.distance = ret.ev.distance;
+            max_ev.frame = ret.ev.frame;
+            max_ev.link = ret.ev.link;
+            max_ev.v_addr = ret.ev.v_addr;
         }
     }
 
