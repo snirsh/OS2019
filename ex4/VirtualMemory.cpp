@@ -42,6 +42,7 @@ void VMinitialize()
 
 tree_node rec_helper(tree_node node)
 {
+    indent += "    ";
     word_t w, max_index = 0;
     uint64_t max_distance = 0;
     uint64_t ev_addr, ev_link;
@@ -65,9 +66,9 @@ tree_node rec_helper(tree_node node)
                 ret.ev_addr = (node.ev_addr << OFFSET_WIDTH) + i;
                 ret.frame = w;
                 MSG(indent<<"calling rec on frame "<<w)
-                indent += "    ";
                 ret = rec_helper(ret);
                 if (ret.empty || ret.max ==  NUM_FRAMES - 1) {
+                    indent = indent.substr(0,indent.length() - 4);
                     return ret;
                 }
             } else {
@@ -164,7 +165,7 @@ int load_page(uint64_t v_addr)
             addr1 = frame;
         } else {
             addr1 = addr2;
-            MSG("       found ref: "<<addr2)
+            MSG("           found ref: "<<addr2)
         }
     }
 }
