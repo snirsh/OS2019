@@ -94,7 +94,7 @@ tree_node rec_helper(tree_node node)
         if ((ret.frame != ret.ignore) || (ret.frame == 0)) {
             ret.empty = true;
             MSG(indent<<"rec "<<node.frame<<" return EMPTY "<< ret.frame)
-            indent = indent.substr(0,indent.length - 4);
+            indent = indent.substr(0,indent.length() - 4);
             return ret;
         }
     }
