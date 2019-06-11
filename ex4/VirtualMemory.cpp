@@ -104,6 +104,7 @@ tree_node rec_helper(tree_node node)
     ret.ev_addr = ev_addr;
     ret.ev_link = ev_link;
     MSG(indent<<"rec "<<ret.frame<<" return MAX "<< ret.max)
+    indent = indent.substr(0,indent.length() - 4);
     return ret;
 }
 
