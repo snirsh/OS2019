@@ -67,7 +67,7 @@ tree_node rec_helper(tree_node node)
                 ret.frame = w;
                 MSG(indent<<"calling rec on frame "<<w)
                 ret = rec_helper(ret);
-                if (ret.empty || ret.max ==  NUM_FRAMES - 1) {
+                if (ret.empty) {
                     indent = indent.substr(0,indent.length() - 4);
                     return ret;
                 }
