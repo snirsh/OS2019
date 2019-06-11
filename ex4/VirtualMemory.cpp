@@ -100,7 +100,10 @@ tree_node rec_helper(tree_node node)
         }
     }
     ret.max = max_index;
-    ret.ev = max_ev;
+    ret.ev.distance = max_ev.distance;
+    ret.ev.frame = max_ev.frame;
+    ret.ev.v_addr = max_ev.v_addr;
+    ret.ev.link = max_ev.link;
     MSG("               rec "<<ret.frame<<" return MAX "<< ret.max)
     return ret;
 }
