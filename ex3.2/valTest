@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+g++ SampleClient.cpp MapReduceFramework.h MapReduceFramework.cpp Barrier.cpp -lpthread -o run
+
+touch test
+valgrind --track-origins=yes --leak-check=full --log-file="Log" ./run > test
+echo "" >> Log 
+echo "Your runs Output:" >> Log 
+echo "" >> Log 
+cat test >> Log
+rm test
+
+cat Log
