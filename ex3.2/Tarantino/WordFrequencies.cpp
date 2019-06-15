@@ -15,7 +15,7 @@ using std::ofstream;
 using std::vector;
 
 // TODO: Play with this path to match your directories
-const string SCRIPTS_DIR = "~/OS2019/ex3.2/Tarantino/scripts/";
+const string SCRIPTS_DIR = "./Tarantino/scripts/";
 const int REPORT_FREQ_MS = 500;
 
 class ScriptJob

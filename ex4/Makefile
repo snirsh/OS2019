@@ -39,5 +39,5 @@ testo:
 
 testo2:
 	make
-	$(CC) -g -std=c++11 -o testo tests/tester.cpp PhysicalMemory.cpp $(LIBNAME)
+	$(CC) -g -std=c++11 -o testo tests/randomTest.cpp PhysicalMemory.cpp $(LIBNAME)
 	chmod 777 testo

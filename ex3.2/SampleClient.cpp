@@ -68,12 +68,6 @@ public:
 		usleep(150000);
 		emit3(k3, v3, context);
 	}
-
-	void print_pair(IntermediatePair* ip) const {
-		char c = ((const KChar*)ip->first)->c;
-		int count = ((const VCount*)ip->second)->count;
-		MSG("["<<c<<"] ["<<count<<"]")
-	}
 };
 
 
