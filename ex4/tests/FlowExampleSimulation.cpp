@@ -10,8 +10,8 @@
 #include <vector>
 #include <iostream>
 
-#include "VirtualMemory.h"
-#include "PhysicalMemory.h"
+#include "../VirtualMemory.h"
+#include "../PhysicalMemory.h"
 
 using namespace std;
 
