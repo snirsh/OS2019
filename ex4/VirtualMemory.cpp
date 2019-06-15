@@ -3,8 +3,10 @@
 #include "VirtualMemory.h"
 #include "PhysicalMemory.h"
 
-#define MSG(msg) std::cout << msg << std::endl;
+#define MSG(msg) if (print) {std::cout << msg << std::endl;}
 #define ABS(x) (x > 0 ? x : -x)
+
+bool print = false;
 std::string indent = "            ";
 
 struct tree_node {
