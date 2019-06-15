@@ -131,7 +131,7 @@ word_t find_frame(uint64_t page_num, word_t ignore)
     if (node.empty) {
         MSG("           [find_frame] EMPTY: frame = "<<node.frame)
         if (node.frame == 0) {return 1;}
-        PMwrite(node.empty_link, 0);
+        //PMwrite(node.empty_link, 0);
         return node.frame;
     } else if (node.max < NUM_FRAMES - 1) {
         MSG("           [find_frame] MAX: frame = "<<node.max + 1)
