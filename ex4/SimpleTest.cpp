@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
     VMwrite(5 * 2 * PAGE_SIZE, 2);
     VMwrite(5 * 3 * PAGE_SIZE, 3);
     VMwrite(5 * 4 * PAGE_SIZE, 4);
-
+    VMread(5 * 4 * PAGE_SIZE, 4);
     /*
     VMinitialize();
     for (uint64_t i = 0; i < (2 * NUM_FRAMES); ++i) {
