@@ -69,7 +69,8 @@ void* do_work(void* arg)
 	for (auto pair=tc->inter_vec->begin(); pair != tc->inter_vec->end(); pair++) {
 		jc->client->print_pair(&*pair);
 	}
-	std::sort(tc->inter_vec->begin(), tc->inter_vec->end());
+	std::sort(tc->inter_vec->begin(), tc->inter_vec->end(),
+			  [](const IntermediatePair& first, const IntermediatePair& second) {return *first.first < *second.first;});
 	MSG("*** thread "<<tid<<" finished sorting ***")
 	for (auto pair=tc->inter_vec->begin(); pair != tc->inter_vec->end(); pair++) {
 		jc->client->print_pair(&*pair);
