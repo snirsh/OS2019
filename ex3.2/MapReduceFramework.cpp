@@ -65,16 +65,10 @@ void* do_work(void* arg)
 		cur_index = jc->atomic_done->load();
 	}
 	// sort
-	MSG("*** thread "<<tid<<" started sorting ***")
-	for (auto pair=tc->inter_vec->begin(); pair != tc->inter_vec->end(); pair++) {
-		jc->client->print_pair(&*pair);
-	}
+
 	std::sort(tc->inter_vec->begin(), tc->inter_vec->end(),
 			  [](const IntermediatePair& first, const IntermediatePair& second) {return *first.first < *second.first;});
-	MSG("*** thread "<<tid<<" finished sorting ***")
-	for (auto pair=tc->inter_vec->begin(); pair != tc->inter_vec->end(); pair++) {
-		jc->client->print_pair(&*pair);
-	}
+
 	jc->barrier->barrier();
 	jc->state->stage = REDUCE_STAGE;
 
