@@ -9,7 +9,7 @@ std::string indent = "            ";
 
 struct tree_node {
     uint64_t depth, req_page, ev_addr, ev_distance;
-    word_t frame, ignore, max, ev_frame, ev_link, empty_link;
+    word_t frame, ignore, max, ev_frame, link;
     bool empty, link_toggle;
 };
 
@@ -55,7 +55,7 @@ tree_node rec_helper(tree_node node)
     ret.frame = node.frame;
     ret.empty = false;
     ret.link_toggle = false;
-    ret.empty_link = 0;
+    ret.link = 0;
     ret.max = 0;
     ret.ev_distance = 0;
 
@@ -71,7 +71,7 @@ tree_node rec_helper(tree_node node)
                 ret = rec_helper(ret);
                 if (ret.empty) {
                     if (ret.link_toggle) {
-                        ret.empty_link = (node.frame * PAGE_SIZE) + i;
+                        ret.link = (node.frame * PAGE_SIZE) + i;
                         ret.link_toggle = false;
                     }
                     indent = indent.substr(0,indent.length() - 4);
@@ -81,8 +81,8 @@ tree_node rec_helper(tree_node node)
                 ret.ev_addr = (node.ev_addr << OFFSET_WIDTH) + i;
                 ret.ev_distance = get_distance(node.req_page, ret.ev_addr);
                 ret.ev_frame = w;
-                ret.ev_link = (node.frame * PAGE_SIZE) + i;
-                MSG(indent<<"[LEAF] page: "<<ret.ev_addr<<"  frame: "<<w<<"  dist: "<<ret.ev_distance<<"  link: "<<ret.ev_link)
+                ret.link = (node.frame * PAGE_SIZE) + i;
+                MSG(indent<<"[LEAF] page: "<<ret.ev_addr<<"  frame: "<<w<<"  dist: "<<ret.ev_distance<<"  link: "<<ret.link)
             }
         }
         if (w > max_index) { max_index = w; }
@@ -92,7 +92,7 @@ tree_node rec_helper(tree_node node)
             MSG(indent<<"new max leaf. frame: "<<ret.ev_frame<<" distance: "<< ret.ev_distance)
             max_distance = ret.ev_distance;
             ev_frame = ret.ev_frame;
-            ev_link = ret.ev_link;
+            ev_link = ret.link;
             ev_addr = ret.ev_addr;
         }
     }
@@ -110,7 +110,7 @@ tree_node rec_helper(tree_node node)
     ret.ev_distance = max_distance;
     ret.ev_frame = ev_frame;
     ret.ev_addr = ev_addr;
-    ret.ev_link = ev_link;
+    ret.link = ev_link;
     MSG(indent<<"rec "<<ret.frame<<" return MAX "<< ret.max)
     indent = indent.substr(0,indent.length() - 4);
     return ret;
@@ -121,7 +121,7 @@ word_t find_frame(uint64_t page_num, word_t ignore)
     tree_node node;
     node.frame = 0;
     node.depth = 0;
-    node.empty = false;;
+    node.empty = false;
     node.req_page = page_num;
     node.ignore = ignore;
     node.ev_addr = 0;
@@ -131,7 +131,7 @@ word_t find_frame(uint64_t page_num, word_t ignore)
     if (node.empty) {
         MSG("           [find_frame] EMPTY: frame = "<<node.frame)
         if (node.frame == 0) {return 1;}
-        PMwrite(node.empty_link, 0);
+        PMwrite(node.link, 0);
         return node.frame;
     } else if (node.max < NUM_FRAMES - 1) {
         MSG("           [find_frame] MAX: frame = "<<node.max + 1)
@@ -140,7 +140,7 @@ word_t find_frame(uint64_t page_num, word_t ignore)
         MSG("           [find_frame] EVICT: frame "<<node.ev_frame<<" to page "<<node.ev_addr)
         PMevict(node.ev_frame, node.ev_addr);
         clearTable(node.ev_frame);
-        PMwrite(node.ev_link, 0);
+        PMwrite(node.link, 0);
         return node.ev_frame;
     }
 }
