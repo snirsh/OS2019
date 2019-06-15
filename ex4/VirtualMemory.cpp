@@ -43,10 +43,8 @@ void VMinitialize()
 tree_node rec_helper(tree_node node)
 {
     indent += "    ";
-    word_t w, max_index = 0;
-    uint64_t max_distance = 0;
-    uint64_t ev_addr;
-    word_t ev_frame, ev_link;
+    word_t w, ev_frame, ev_link, max_index = 0;
+    uint64_t ev_addr, max_distance = 0;
 
     tree_node ret;
     ret.ignore = node.ignore;
@@ -63,7 +61,7 @@ tree_node rec_helper(tree_node node)
         PMread((node.frame * PAGE_SIZE) + i, &w);
         MSG(indent<<"i="<<i<<"  w="<<w)
         if (w) {
-            if (node.depth < TABLES_DEPTH-1) {
+            if (node.depth < TABLES_DEPTH - 1) {
                 ret.depth = node.depth + 1;
                 ret.ev_addr = (node.ev_addr << OFFSET_WIDTH) + i;
                 ret.frame = w;
@@ -216,5 +214,3 @@ void printPM()
         MSG("["<<i<<"] ["<<temp<<"]")
     }
 }
-
-
