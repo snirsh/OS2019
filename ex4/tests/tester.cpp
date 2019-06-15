@@ -5,7 +5,7 @@
 #include <random>
 #include <iostream>
 #include <cassert>
-#include "VirtualMemory.h"
+#include "../VirtualMemory.h"
 
 #define SUCCESS 1
 #define FAIL 0
