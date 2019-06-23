@@ -42,7 +42,7 @@ tarant:
 	make
 	$(CC) -pthread -g -std=c++11 -o tarant Tarantino/WordFrequencies.cpp libMapReduceFramework.a
 	chmod 777 tarant
-	./tarant
+	#./tarant
 
 valgrind:
 	valgrind --leak-check=full --show-possibly-lost=no --show-reachable=no --undef-value-errors=no testo

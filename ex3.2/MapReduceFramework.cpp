@@ -67,7 +67,8 @@ void* do_work(void* arg)
 	// sort
 
 	std::sort(tc->inter_vec->begin(), tc->inter_vec->end(),
-			  [](const IntermediatePair& first, const IntermediatePair& second) {return *first.first < *second.first;});
+			  [](const IntermediatePair& a, const IntermediatePair& b)
+			  	{return *a.first < *b.first;});
 
 	jc->barrier->barrier();
 	jc->state->stage = REDUCE_STAGE;
