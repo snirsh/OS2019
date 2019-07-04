@@ -39,7 +39,7 @@ int init_socket(unsigned short port, bool server, char* host) {
 
     memset(&sa, 0, sizeof(struct sockaddr_in));
     sa.sin_family = hp->h_addrtype;
-    memcpy((char*)&sa.sin_addr, hp->h_addr, hp->h_length);
+    memcpy(&sa.sin_addr, hp->h_addr, hp->h_length);
     sa.sin_port = htons(port); 
 
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
