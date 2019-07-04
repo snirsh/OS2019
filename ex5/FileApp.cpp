@@ -20,7 +20,7 @@ struct request {
     char command;
 };
 
-int init_socket(unsigned short port, bool server, char* host) {
+int init_socket(unsigned short port, bool server, char* ip) {
     int sockfd;
     char myname[MAX_HOSTNAME+1];
     struct sockaddr_in sa;
@@ -30,7 +30,7 @@ int init_socket(unsigned short port, bool server, char* host) {
         gethostname(myname, MAX_HOSTNAME);
         hp = gethostbyname(myname);
     } else {
-        hp = gethostbyname(host);
+        hp = gethostbyname(ip);
     }
     
     if (!hp) {
@@ -58,15 +58,16 @@ int init_socket(unsigned short port, bool server, char* host) {
         }
         printf(SERVERS_BIND_IP_STR, inet_ntoa(sa.sin_addr));
         return sockfd;
+    } else {
+        const struct sockaddr* addr = (struct sockaddr *)&sa;
+        if (connect(sockfd, addr, sizeof(sa)) < 0) {
+            ERR("error in connect()");
+            close(sockfd);
+            return -1;
+        }
+        printf(CONNECTED_SUCCESSFULLY_STR);
+        return sockfd;
     }
-    const struct sockaddr* addr = (struct sockaddr *)&sa;
-    if (connect(sockfd, addr, sizeof(sa)) < 0) {
-        ERR("error in connect()");
-        close(sockfd);
-        return -1;
-    }
-    printf(CONNECTED_SUCCESSFULLY_STR);
-    return sockfd;
 }
 
 int run_server(char* path, int port)
@@ -79,6 +80,13 @@ int run_server(char* path, int port)
     listen(my_socket, MAX_QUEUE);
     printf(WAIT_FOR_CLIENT_STR);
 
+    remote_socket = accept(my_socket, NULL, NULL);
+    if (remote_socket < 0) {
+        ERR("error in accept()");
+        return -1;
+    }
+
+    /*
     fd_set clients_fds, read_fds;
     FD_ZERO(&clients_fds);
     FD_SET(my_socket, &clients_fds);
@@ -108,6 +116,7 @@ int run_server(char* path, int port)
             //handle_clients();
         }
     }
+    */
 }
 
 int run_client(char* path, char* file, char* ip, unsigned short port, char mode)
@@ -117,6 +126,22 @@ int run_client(char* path, char* file, char* ip, unsigned short port, char mode)
         ERR("error in init_socket()");
         return -1;
     }
+
+    char myname[MAX_HOSTNAME+1];
+    char* ip;
+    struct hostent *hp;
+    struct sockaddr_in sa;
+
+    gethostname(myname, MAX_HOSTNAME);
+    hp = gethostbyname(myname);
+    if (!hp) {
+        ERR("error in gethostbyname()");
+        return -1;
+    }
+    memset(&sa, 0, sizeof(struct sockaddr_in));
+    sa.sin_family = hp->h_addrtype;
+    memcpy(&sa.sin_addr, hp->h_addr, hp->h_length);
+    ip = inet_ntoa(sa.sin_addr);   
 }
 
 int read_write_data(int s, char *buf, int n, bool read_bool=true)
