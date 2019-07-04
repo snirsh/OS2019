@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <errno.h>
 
 #define MSG(msg) std::cout << msg << std::endl
 #define ERR(msg) std::cerr << msg << std::endl
