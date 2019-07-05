@@ -122,26 +122,26 @@ int run_server(char* path, int port)
     printf(FILENAME_STR, filename);
 
     // get from client: file size
-    size_t size_d;
-    read_write_data(remote_socket, &size_d, sizeof(size_t));
-    if (size_d == -1) {
-        printf(REMOTE_ERROR_STR);
+    size_t size_u;
+    read_write_data(remote_socket, (char*)&size_u, sizeof(size_t));
+    if (size_u == -1) {
+        printf(REMOTE_FILE_ERROR_STR);
         printf(FAILURE_STR);
         return -1;
     }
 
-    // send to client: file size (0 if download, -1 if file error)
-    size_t size_u = 0;
-    if (mode == 'u') {
+    // send to client: file size (0 if upload, -1 if file error)
+    size_t size_d = 0;
+    if (mode == 'd') {
         struct stat st;
         if (stat(path, &st) < 0) {
-            size_u = -1;
+            size_d = -1;
         } else {
-            size_u = st.st_size;
+            size_d = st.st_size;
         }
     }
-    read_write_data(my_socket, size_u, sizeof(size_t), false);
-    if (size_u == -1) {
+    read_write_data(my_socket, (char*)&size_d, sizeof(size_t), false);
+    if (size_d == -1) {
         printf(MY_FILE_ERROR_STR);
         printf(FAILURE_STR);
         return -1;
@@ -164,7 +164,29 @@ int run_server(char* path, int port)
         // goto ready;
     }
     write(remote_socket, &reply, 1);
-    
+
+    // upload/download the file
+    printf("size_u:%zu, size_d:%zu\n", size_u, size_d);
+    int ret;
+    FILE *file;
+    if (mode == 'u') {
+        file = fopen(full_path, "w+");
+        ret = read_write_data(remote_socket, (char*)file, size_u);
+        if (ret == size_u) {
+            printf(SUCCESS_STR);
+        } else {
+            printf(FAILURE_STR);
+        }
+    }
+    if (mode == 'd') {
+        file = fopen(full_path, "r");
+        ret = read_write_data(remote_socket, (char*)file, size_d, false);
+        if (ret == size_d) {
+            printf(SUCCESS_STR);
+        } else {
+            printf(FAILURE_STR);
+        }
+    }
     /*
     fd_set clients_fds, read_fds;
     FD_ZERO(&clients_fds);
@@ -198,7 +220,7 @@ int run_server(char* path, int port)
     */
 }
 
-int run_client(char* path, char* file, char* ip, unsigned short port, char mode)
+int run_client(char* path, char* file_name, char* ip, unsigned short port, char mode)
 {
     // open the socket
     int my_socket;
@@ -224,15 +246,9 @@ int run_client(char* path, char* file, char* ip, unsigned short port, char mode)
     my_ip = inet_ntoa(sa.sin_addr);
 
     // send to server: IP, mode, filename
-    char buf_ip[LEN_IP];
-    char buf_filename[LEN_FILENAME+1];
-    memset(buf_ip, 0, LEN_IP);
-    memset(buf_filename, 0, LEN_FILENAME+1);
-    memcpy(buf_ip, &my_ip, LEN_IP);
-    memcpy(buf_filename, &file, LEN_FILENAME+1);
     read_write_data(my_socket, my_ip, LEN_IP, false);
     read_write_data(my_socket, &mode, 1, false);
-    read_write_data(my_socket, file, LEN_FILENAME, false);
+    read_write_data(my_socket, file_name, LEN_FILENAME, false);
 
     // send to server: file size (0 if download, -1 if file error)
     size_t size_u = 0;
@@ -244,7 +260,7 @@ int run_client(char* path, char* file, char* ip, unsigned short port, char mode)
             size_u = st.st_size;
         }
     }
-    read_write_data(my_socket, size_u, sizeof(size_t), false);
+    read_write_data(my_socket, (char*)&size_u, sizeof(size_t), false);
     if (size_u == -1) {
         printf(MY_FILE_ERROR_STR);
         printf(FAILURE_STR);
@@ -253,7 +269,7 @@ int run_client(char* path, char* file, char* ip, unsigned short port, char mode)
 
     // get from server: file size
     size_t size_d = 0;
-    read_write_data(my_socket, &size_d, sizeof(size_t));
+    read_write_data(my_socket, (char*)&size_d, sizeof(size_t));
     if (size_d == -1) {
         printf(REMOTE_FILE_ERROR_STR);
         printf(FAILURE_STR);
@@ -270,11 +286,12 @@ int run_client(char* path, char* file, char* ip, unsigned short port, char mode)
     }
 
     // upload/download the file
+    printf("size_u:%zu, size_d:%zu\n", size_u, size_d);
     int ret;
     FILE *file;
     if (mode == 'u') {
         file = fopen(path, "r");
-        ret = read_write_data(my_socket, file, size_u, false);
+        ret = read_write_data(my_socket, (char*)file, size_u, false);
         if (ret == size_u) {
             printf(SUCCESS_STR);
         } else {
@@ -283,8 +300,8 @@ int run_client(char* path, char* file, char* ip, unsigned short port, char mode)
     }
     if (mode == 'd') {
         file = fopen(path, "w+");
-        ret = read_write_data(my_socket, file, size_u);
-        if (ret == size_u) {
+        ret = read_write_data(my_socket, (char*)file, size_d);
+        if (ret == size_d) {
             printf(SUCCESS_STR);
         } else {
             printf(FAILURE_STR);
