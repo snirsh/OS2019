@@ -1,5 +1,6 @@
 #include "prints.h"
 #include <cstring>
+#include <stdio.h>
 #include <iostream>
 #include <unistd.h>
 #include <stdlib.h>
@@ -19,6 +20,7 @@
 #define LEN_IP 16
 #define LEN_SIZE 16
 #define LEN_FILENAME 255
+#define BUF_SIZE 1024
 
 int read_write_data(int s, char *buf, int n, bool read_bool=true)
 {
@@ -140,7 +142,7 @@ int run_server(char* path, int port)
             size_d = st.st_size;
         }
     }
-    read_write_data(my_socket, (char*)&size_d, sizeof(size_t), false);
+    read_write_data(remote_socket, (char*)&size_d, sizeof(size_t), false);
     if (size_d == -1) {
         printf(MY_FILE_ERROR_STR);
         printf(FAILURE_STR);
@@ -167,57 +169,40 @@ int run_server(char* path, int port)
 
     // upload/download the file
     printf("size_u:%zu, size_d:%zu\n", size_u, size_d);
-    int ret;
     FILE *file;
+    char buf[BUF_SIZE];
+    size_t count = 0;
+    size_t ret;
+
     if (mode == 'u') {
         file = fopen(full_path, "w+");
-        ret = read_write_data(remote_socket, (char*)file, size_u);
-        if (ret == size_u) {
-            printf(SUCCESS_STR);
-        } else {
-            printf(FAILURE_STR);
-        }
-    }
-    if (mode == 'd') {
-        file = fopen(full_path, "r");
-        ret = read_write_data(remote_socket, (char*)file, size_d, false);
-        if (ret == size_d) {
-            printf(SUCCESS_STR);
-        } else {
-            printf(FAILURE_STR);
-        }
-    }
-    /*
-    fd_set clients_fds, read_fds;
-    FD_ZERO(&clients_fds);
-    FD_SET(my_socket, &clients_fds);
-    FD_SET(STDIN_FILENO, &clients_fds);
-
-    bool running = true;
-    while (running) {
-        read_fds = clients_fds;
-        if (select(MAX_CLIENTS+1, &read_fds, NULL, NULL, NULL) < 0) {
-            //terminate_server();
-            return -1;
-        }
-        if (FD_ISSET(my_socket, &read_fds)) {
-            remote_socket = accept(my_socket, NULL, NULL);
-            if (remote_socket < 0) {
-                ERR("error in accept()");
+        char buf[BUF_SIZE];
+        size_t count = 0;
+        size_t ret;
+        while (count < size_u) {
+            ret = read_write_data(remote_socket, buf, BUF_SIZE);
+            if (ret < 0) {
+                printf(FAILURE_STR);
                 return -1;
             }
-            FD_SET(remote_socket, &clients_fds);
+            fprintf(file, "%s", buf);
+            count += ret;
         }
-        if (FD_ISSET(STDIN_FILENO, &read_fds)) {
-            //get_input();
-        }
-        else {
-            //will check each client if it’s in readfds
-            //and then receive a message from him
-            //handle_clients();
-        }
+        printf(SUCCESS_STR);
     }
-    */
+    if (mode == 'd') {
+        file = fopen(path, "r");
+        while (count < size_d) {
+            ret = fread(buf, 1, BUF_SIZE, file);
+            if (ret < 0) {
+                printf(FAILURE_STR);
+                return -1;
+            }
+            ret = read_write_data(my_socket, buf, BUF_SIZE, false);
+            count += ret;
+        }
+        printf(SUCCESS_STR);
+    }
 }
 
 int run_client(char* path, char* file_name, char* ip, unsigned short port, char mode)
@@ -287,25 +272,36 @@ int run_client(char* path, char* file_name, char* ip, unsigned short port, char 
 
     // upload/download the file
     printf("size_u:%zu, size_d:%zu\n", size_u, size_d);
-    int ret;
     FILE *file;
+    char buf[BUF_SIZE];
+    size_t count = 0;
+    size_t ret;
+    
     if (mode == 'u') {
         file = fopen(path, "r");
-        ret = read_write_data(my_socket, (char*)file, size_u, false);
-        if (ret == size_u) {
-            printf(SUCCESS_STR);
-        } else {
-            printf(FAILURE_STR);
+        while (count < size_u) {
+            ret = fread(buf, 1, BUF_SIZE, file);
+            if (ret < 0) {
+                printf(FAILURE_STR);
+                return -1;
+            }
+            ret = read_write_data(my_socket, buf, BUF_SIZE, false);
+            count += ret;
         }
+        printf(SUCCESS_STR);
     }
     if (mode == 'd') {
         file = fopen(path, "w+");
-        ret = read_write_data(my_socket, (char*)file, size_d);
-        if (ret == size_d) {
-            printf(SUCCESS_STR);
-        } else {
-            printf(FAILURE_STR);
+        while (count < size_d) {
+            ret = read_write_data(my_socket, buf, BUF_SIZE);
+            if (ret < 0) {
+                printf(FAILURE_STR);
+                return -1;
+            }
+            fprintf(file, "%s", buf);
+            count += ret;
         }
+        printf(SUCCESS_STR);
     }
 }
 
