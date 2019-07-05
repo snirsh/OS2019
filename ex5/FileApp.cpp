@@ -309,6 +309,56 @@ int run_client(char* path, char* file_name, char* ip, unsigned short port, char 
     }
 }
 
+void running_loop()
+{
+    // set of socket descriptors
+    MAX_CLIENTS = 1;
+    fd_set clientfds;
+    fd_set readfds;
+
+    FD_ZERO(&clientfds);
+    FD_SET(my_socket, &clientfds);
+    FD_SET(STDIN_FILENO, &clientfds)
+
+    while (true)
+    {
+        /**
+         * server's run loop with fds
+         */
+        readfds = clientfds;
+
+        activity = select(max_sd+1, &readfds, NULL, NULL, NULL);
+        if(activity<0)
+        {
+            terminateServer();
+            return -1;
+        }
+        printf(WAIT_FOR_CLIENT_STR);
+        // incomming connection
+        if(FD_ISSET(my_socket, &readfds))
+        {
+            // TODO: connect a new client
+            if((new_socket = accept(my_socket, (struct sockaddr*) &address, (socklen_t*)addr_len)) < 0)
+            {
+                ERR("error in accept")
+                return -1;
+            }
+            
+            //informing user of connection
+            printf(CONNECTED_SUCCESSFULLY_STR)
+        }
+        if(FD_ISSET(STDIN_FILENO, &readfds)){
+            serverStdInput();
+        }
+        else
+        {
+            /* check every client if in readfds and recieve message from him */
+        }
+    }
+    
+}
+
+
 int main(int argc, char **argv)
 {
     /**
