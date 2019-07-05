@@ -8,17 +8,39 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 #define MSG(msg) std::cout << msg << std::endl
 #define ERR(msg) std::cerr << msg << std::endl
 #define MAX_CLIENTS 30
 #define MAX_HOSTNAME 30
 #define MAX_QUEUE 3
+#define MAX_PATH 4095
+#define LEN_IP 16
+#define LEN_SIZE 16
+#define LEN_FILENAME 255
 
-struct request {
-    char* ip, filename, path;
-    char command;
-};
+int read_write_data(int s, char *buf, int n, bool read_bool=true)
+{
+    /**
+     * Reads or writes data from file descriptor to buffer or the opposite 
+     * according to number of iterations to read/write which is defined in n.
+     * read boolean default is to read (true), if false we write from buf to file.
+    **/
+    int bcount = 0;
+    int br = 0;
+    while (bcount < n) {
+        br = read_bool ? read(s, buf, n-bcount) : write(s, buf, n-bcount); 
+        if (br > 0) {
+            bcount += br;
+            buf += br;
+        }
+        if (br < 1) {
+            return -1;
+        }
+    }
+    return bcount;
+}
 
 int init_socket(unsigned short port, bool server, char* ip) {
     int sockfd;
@@ -86,6 +108,46 @@ int run_server(char* path, int port)
         return -1;
     }
 
+    char ip[LEN_IP];
+    char filename[LEN_FILENAME+1];
+    char buf_size[LEN_SIZE];
+    char cmd;
+    read_write_data(remote_socket, ip, LEN_IP);
+    read_write_data(remote_socket, &cmd, 1);
+    read_write_data(remote_socket, filename, LEN_FILENAME);
+    read_write_data(remote_socket, buf_size, LEN_SIZE);
+
+    printf(CLIENT_IP_STR, ip);
+    printf(CLIENT_COMMAND_STR, cmd);
+    printf(FILENAME_STR, filename);
+
+    size_t size;
+    sscanf(buf_size, "%zu", &size);
+
+    char full_path[MAX_PATH];
+    strcpy(full_path, path);
+    strcat(full_path, "/");
+    strcat(full_path, filename);
+    printf(FILE_PATH_STR, full_path);
+
+    char reply = '0';
+    if (strlen(filename) >= LEN_FILENAME || strstr(filename, "/")
+        || strlen(full_path) >= MAX_PATH) {
+        printf(FILE_NAME_ERROR_STR);
+        reply = '1';
+        read_write_data(remote_socket, &reply, 1, false);
+        // goto ready;
+    }
+    write(remote_socket, &reply, 1);
+    
+    if (cmd == 'd') {
+        struct stat st;
+        stat(path, &st);
+        size = st.st_size;
+        sprintf(buf_size, "%zu", size);
+        read_write_data(my_socket, buf_size, LEN_SIZE, false);
+    }
+
     /*
     fd_set clients_fds, read_fds;
     FD_ZERO(&clients_fds);
@@ -128,7 +190,7 @@ int run_client(char* path, char* file, char* ip, unsigned short port, char mode)
     }
 
     char myname[MAX_HOSTNAME+1];
-    char* ip;
+    char* my_ip;
     struct hostent *hp;
     struct sockaddr_in sa;
 
@@ -141,29 +203,43 @@ int run_client(char* path, char* file, char* ip, unsigned short port, char mode)
     memset(&sa, 0, sizeof(struct sockaddr_in));
     sa.sin_family = hp->h_addrtype;
     memcpy(&sa.sin_addr, hp->h_addr, hp->h_length);
-    ip = inet_ntoa(sa.sin_addr);   
-}
+    my_ip = inet_ntoa(sa.sin_addr);
 
-int read_write_data(int s, char *buf, int n, bool read_bool=true)
-{
-    /**
-     * Reads or writes data from file descriptor to buffer or the opposite 
-     * according to number of iterations to read/write which is defined in n.
-     * read boolean default is to read (true), if false we write from buf to file.
-    **/
-    int bcount = 0;
-    int br = 0;
-    while (bcount < n) {
-        br = read_bool ? read(s, buf, n-bcount) : write(s, buf, n-bcount); 
-        if (br > 0) {
-            bcount += br;
-            buf += br;
-        }
-        if (br < 1) {
-            return -1;
-        }
+    char buf_ip[LEN_IP];
+    char buf_filename[LEN_FILENAME+1];
+    memset(buf_ip, 0, LEN_IP);
+    memset(buf_filename, 0, LEN_FILENAME+1);
+    memcpy(buf_ip, &my_ip, LEN_IP);
+    memcpy(buf_filename, &file, LEN_FILENAME+1);
+
+    char buf_size[LEN_SIZE];
+    memset(buf_size, 0, LEN_SIZE);
+    size_t size = 0;
+    if (mode == 'u') {
+        struct stat st;
+        stat(path, &st);
+        size = st.st_size;
     }
-    return bcount;
+    sprintf(buf_size, "%zu", size);
+
+    read_write_data(my_socket, my_ip, LEN_IP, false);
+    read_write_data(my_socket, &mode, 1, false);
+    read_write_data(my_socket, file, LEN_FILENAME, false);
+    read_write_data(my_socket, buf_size, LEN_SIZE, false);
+
+    char reply;
+    read(my_socket, &reply, 1);
+    if (reply == '1') {
+        printf(FILE_NAME_ERROR_STR);
+        printf(FAILURE_STR);
+        return -1;
+    }
+    if (reply == '2') {
+        printf(REMOTE_FILE_ERROR_STR);
+        printf(FAILURE_STR);
+        return -1;
+    }
+
 }
 
 int main(int argc, char **argv)
@@ -192,6 +268,7 @@ int main(int argc, char **argv)
     case 'd':
         port_num = (unsigned short) strtoul(argv[4], NULL, 0);
         run_client(argv[2], argv[3], argv[5], port_num, mode);
+        break;
     default:
         fprintf(stderr, "Wrong switch inserted, supported switches are -s, -d, -u, you wrote %s", argv[1]);
     }
