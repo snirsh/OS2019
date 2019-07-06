@@ -1,22 +1,13 @@
 snirsh, giladam 
 Student Snir Sharristh (305500001), Gil Adam (200139814)
-EX: 4
+EX: 5
 
 FILES:
 README          --  this file
 
 Makefile        --  makefile for the ex
 
-PhysicalMemory  --  Implementation of the PhysicalMemory containing write/
-                    read/evict/restore commands from the Physical Memory (HD)
-
-VirtualMemory   --  Implementation for the virtual memory, containing what
-                    we did, mainly the functions Read and Write, Though the
-                    biggest implementation there is the way we traverse the
-                    memory tree and finding the right frame.
-
-MemoryConstants -- This file contains all the memory constants 
-                   e.g word width, offset width, physical addr width etc.
+FileApp.cpp  --  Implementation of the FileApp program
 
 REMARKS:
 none.
