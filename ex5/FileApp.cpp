@@ -183,7 +183,6 @@ int handle_clients(int socket, char* path, int port)
     }
     
     // upload/download the file
-    printf("size_u:%zu, size_d:%zu\n", size_u, size_d);
     FILE* file;
     if (mode == 'u') {
         file = fopen(full_path, "w+");
@@ -268,7 +267,6 @@ int run_client(char* path, char* file_name, char* ip, unsigned short port, char 
     }
 
     // upload/download the file
-    printf("size_u:%zu, size_d:%zu\n", size_u, size_d);
     FILE* file;
     if (mode == 'd') {
         file = fopen(path, "w+");
