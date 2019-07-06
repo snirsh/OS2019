@@ -15,7 +15,7 @@ TARGETS = $(OSMLIB)
 TAR=tar
 TARFLAGS=-cvf
 TARNAME=ex5.tar
-TARSRCS=$(LIBSRC) prints.h Makefile README
+TARSRCS=$(LIBSRC) Makefile README
 
 all:
 	$(CXX) $(CFLAGS) $(OSMLIB) $(LIBSRC)
